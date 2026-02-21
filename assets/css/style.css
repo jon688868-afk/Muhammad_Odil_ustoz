@@ -1,5 +1,5 @@
 /* =====================================================
-   Imom Buxoriy Xalqaro Instituti  |  Premium UI v3.0
+   Imom Buxoriy ilmiy tadqiqot markazi  |  Premium UI v3.0
    ===================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Amiri:wght@400;700&display=swap');
@@ -49,31 +49,34 @@
   --t-fast: 150ms cubic-bezier(.4,0,.2,1);
   --t-base: 250ms cubic-bezier(.4,0,.2,1);
   --t-slow: 400ms cubic-bezier(.4,0,.2,1);
+
+  /* Islamic geometric pattern */
+  --islamic-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='%23e4b73a' stroke-width='0.5' opacity='0.5'%3E%3Cpath d='M40 0L50 10L60 0M40 0L30 10L20 0'/%3E%3Cpath d='M80 40L70 50L80 60M80 40L70 30L80 20'/%3E%3Cpath d='M40 80L50 70L60 80M40 80L30 70L20 80'/%3E%3Cpath d='M0 40L10 50L0 60M0 40L10 30L0 20'/%3E%3Cpath d='M40 20L20 40L40 60L60 40Z'/%3E%3Ccircle cx='40' cy='40' r='12'/%3E%3Cpath d='M20 0L40 20L60 0M80 20L60 40L80 60M60 80L40 60L20 80M0 60L20 40L0 20'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* ─── DARK THEME ──────────────────────────────────── */
 [data-theme="dark"] {
-  --page-bg:        #061a12;
-  --surface-1:      #0a2a1c;
-  --surface-2:      #0e3526;
-  --surface-3:      #124030;
-  --surface-hover:  #164a38;
-  --surface-active: #1a5540;
+  --page-bg:        #0c2e20;
+  --surface-1:      #113d2c;
+  --surface-2:      #164a36;
+  --surface-3:      #1a5540;
+  --surface-hover:  #1e6048;
+  --surface-active: #226b50;
 
   --text-1:   #f0fff8;
-  --text-2:   #8bbda6;
-  --text-3:   #5a8a74;
-  --text-inv: #061a12;
+  --text-2:   #a0d4bb;
+  --text-3:   #6fa68c;
+  --text-inv: #0c2e20;
 
-  --border-1: rgba(255,255,255,.06);
-  --border-2: rgba(255,255,255,.10);
-  --border-3: rgba(255,255,255,.14);
+  --border-1: rgba(255,255,255,.08);
+  --border-2: rgba(255,255,255,.12);
+  --border-3: rgba(255,255,255,.16);
 
-  --sidebar-bg:    #051510;
-  --sidebar-item:  rgba(255,255,255,.04);
-  --topbar-bg:     rgba(6,26,18,.88);
+  --sidebar-bg:    #092419;
+  --sidebar-item:  rgba(255,255,255,.06);
+  --topbar-bg:     rgba(12,46,32,.88);
 
-  --glass-bg:      rgba(10,42,28,.75);
+  --glass-bg:      rgba(17,61,44,.75);
   --glass-border:  rgba(255,255,255,.07);
 
   --chip-bg:  rgba(228,183,58,.12);
@@ -98,7 +101,7 @@
   --border-2: rgba(0,0,0,.09);
   --border-3: rgba(0,0,0,.14);
 
-  --sidebar-bg:    #051510;
+  --sidebar-bg:    #0f563e;
   --sidebar-item:  rgba(255,255,255,.04);
   --topbar-bg:     rgba(240,245,242,.92);
 
@@ -256,7 +259,10 @@ mark { background: rgba(228,183,58,.22); color: var(--gold); border-radius: 3px;
   flex-shrink: 0;
   transition: var(--t-fast);
 }
-.nav-label { transition: var(--t-base); line-height: 1; }
+#sidebar:not(.collapsed) .nav-icon { display: none; }
+#sidebar.collapsed .nav-icon { font-size: 15px; width: 20px; opacity: 0.7; }
+#sidebar.collapsed .nav-item { justify-content: center; }
+.nav-label { transition: var(--t-base); line-height: 1; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
 #sidebar.collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
 
 /* Tooltip when collapsed */
@@ -422,6 +428,18 @@ mark { background: rgba(228,183,58,.22); color: var(--gold); border-radius: 3px;
   border: 2px solid var(--page-bg);
 }
 
+/* Language Dropdown */
+.lang-dropdown { position: relative; }
+.lang-dropdown > .tb-btn { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; min-width: 36px; }
+.lang-dropdown-menu { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--surface-1); border: 1px solid var(--border-2); border-radius: var(--r-md); box-shadow: var(--sh-lg); min-width: 160px; z-index: 9999; overflow: hidden; }
+.lang-dropdown-menu.show { display: block; animation: dropIn .18s ease; }
+.lang-dd-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--text-2); background: transparent; border: none; border-bottom: 1px solid var(--border-1); cursor: pointer; transition: all var(--t-fast); }
+.lang-dd-item:last-child { border-bottom: none; }
+.lang-dd-item:hover { background: var(--surface-hover); color: var(--text-1); }
+.lang-dd-item.active { background: rgba(228,183,58,.08); color: var(--gold); font-weight: 600; }
+.lang-dd-code { font-weight: 700; min-width: 24px; }
+.lang-dd-name { font-weight: 400; }
+
 /* ─────────────────────────────────────────────────────
    PAGE SYSTEM
 ───────────────────────────────────────────────────── */
@@ -438,15 +456,15 @@ mark { background: rgba(228,183,58,.22); color: var(--gold); border-radius: 3px;
 /* ─────────────────────────────────────────────────────
    SECTION HEADERS
 ───────────────────────────────────────────────────── */
-.page-hero {
-  margin-bottom: 28px;
-}
+.page-hero { margin-bottom: 28px; padding: 32px 36px; background: var(--surface-1); border: 1px solid var(--border-1); border-radius: var(--r-xl); position: relative; overflow: hidden; }
+.page-hero::before { content: ''; position: absolute; inset: 0; background-image: var(--islamic-pattern); background-size: 80px 80px; opacity: 0.06; pointer-events: none; }
 .page-hero h1 {
+  position: relative;
   font-size: 26px; font-weight: 800;
   color: var(--text-1); letter-spacing: -.6px;
   line-height: 1.2;
 }
-.page-hero p { font-size: 14px; color: var(--text-2); margin-top: 6px; line-height: 1.6; }
+.page-hero p { position: relative; font-size: 14px; color: var(--text-2); margin-top: 6px; line-height: 1.6; }
 
 .section-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -522,16 +540,8 @@ mark { background: rgba(228,183,58,.22); color: var(--gold); border-radius: 3px;
   margin-bottom: 24px;
   border: 1px solid rgba(228,183,58,.12);
 }
-/* Decorative grid */
-.hero-banner::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(228,183,58,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(228,183,58,.04) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
-}
+/* Decorative Islamic pattern */
+.hero-banner::before { content: ''; position: absolute; inset: 0; background-image: var(--islamic-pattern); background-size: 80px 80px; opacity: 0.06; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent); -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent); pointer-events: none; }
 /* Glow blobs */
 .hero-banner::after {
   content: '';
@@ -1373,6 +1383,18 @@ mark { background: rgba(228,183,58,.22); color: var(--gold); border-radius: 3px;
 .rounded { border-radius: var(--r-md); }
 .rounded-lg { border-radius: var(--r-lg); }
 
+/* FOOTER */
+#site-footer { margin-left: var(--sidebar-width); background: var(--sidebar-bg); border-top: 1px solid rgba(228,183,58,.08); transition: margin-left var(--t-base); position: relative; }
+#site-footer.collapsed { margin-left: 68px; }
+.footer-inner { max-width: 1200px; margin: 0 auto; padding: 40px 32px 24px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 32px; }
+.footer-links h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); margin-bottom: 14px; }
+.footer-links ul { list-style: none; padding: 0; }
+.footer-links li { margin-bottom: 8px; }
+.footer-links a { font-size: 12.5px; color: rgba(255,255,255,.5); text-decoration: none; transition: color var(--t-fast); }
+.footer-links a:hover { color: var(--gold-300); }
+.footer-bottom { padding-top: 20px; border-top: 1px solid rgba(255,255,255,.06); text-align: center; font-size: 11px; color: rgba(255,255,255,.3); }
+
 /* ─────────────────────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────────────────────── */
@@ -1395,12 +1417,15 @@ mark { background: rgba(228,183,58,.22); color: var(--gold); border-radius: 3px;
   .newsletter-banner { flex-direction: column; }
   .nl-form { flex-direction: column; width: 100%; }
   .nl-form .form-input { width: 100%; }
+  #site-footer { margin-left: 0 !important; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
 }
 @media (max-width: 480px) {
   .tabs-wrap { overflow-x: auto; padding-bottom: 2px; }
   #main-content { padding: 14px 12px 32px; }
   .hero-banner h1 { font-size: 22px; }
   .modal-box { padding: 22px 16px; }
+  .footer-grid { grid-template-columns: 1fr; }
 }
 
 /* ─────────────────────────────────────────────────────

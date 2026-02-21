@@ -1,5 +1,5 @@
 // ============================================
-// Imom Buxoriy Xalqaro Instituti
+// Imom Buxoriy ilmiy tadqiqot markazi
 // Main Application Logic — v3.0 (Premium redesign)
 // ============================================
 
@@ -22,6 +22,7 @@
     renderSidebar();
     renderTopbar();
     renderAllPages();
+    renderFooter();
     navigateTo('home');
     initEventListeners();
     initScrollToTop();
@@ -30,7 +31,7 @@
       document.getElementById('loader').classList.remove('show');
     }, 700);
     setTimeout(() => {
-      showToast('Imom Buxoriy Xalqaro Instituti ishga tushdi', 'info');
+      showToast('Imom Buxoriy ilmiy tadqiqot markazi ishga tushdi', 'info');
     }, 800);
   });
 
@@ -60,17 +61,17 @@
     document.documentElement.lang = currentLang;
 
     const navItems = [
-      { id: 'home',          icon: '🏠',  label: t.nav_home },
-      { id: 'foundation',    icon: '🕌',  label: t.nav_foundation },
-      { id: 'corporate',     icon: '🏛️', label: t.nav_corporate },
-      { id: 'research',      icon: '🔬',  label: t.nav_research },
-      { id: 'academy',       icon: '🎓',  label: t.nav_academy },
-      { id: 'international', icon: '🌍',  label: t.nav_international },
-      { id: 'publications',  icon: '📚',  label: t.nav_publications },
-      { id: 'blog',          icon: '✏️',  label: t.nav_blog },
-      { id: 'gallery',       icon: '🖼️',  label: t.nav_gallery },
-      { id: 'archive',       icon: '📁',  label: t.nav_archive },
-      { id: 'contact',       icon: '✉️',  label: t.nav_contact },
+      { id: 'home',          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>', label: t.nav_home },
+      { id: 'foundation',    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>', label: t.nav_foundation },
+      { id: 'corporate',     icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg>', label: t.nav_corporate },
+      { id: 'research',      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>', label: t.nav_research },
+      { id: 'academy',       icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 3 3 6 3s6-1 6-3v-5"/></svg>', label: t.nav_academy },
+      { id: 'international', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>', label: t.nav_international },
+      { id: 'publications',  icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>', label: t.nav_publications },
+      { id: 'blog',          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>', label: t.nav_blog },
+      { id: 'gallery',       icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>', label: t.nav_gallery },
+      { id: 'archive',       icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>', label: t.nav_archive },
+      { id: 'contact',       icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>', label: t.nav_contact },
     ];
 
     sidebar.innerHTML = `
@@ -78,11 +79,10 @@
         <img src="assets/img/logo-gold.png" alt="Logo" class="logo-mark" style="width:38px;height:38px;object-fit:contain;border-radius:0;background:none;box-shadow:none" />
         <div class="logo-text">
           <span class="lt-main">Imom Buxoriy</span>
-          <span class="lt-sub">Xalqaro Instituti</span>
+          <span class="lt-sub">ilmiy tadqiqot markazi</span>
         </div>
       </div>
       <nav class="sidebar-nav">
-        <div class="nav-group-label">MENYU</div>
         ${navItems.map(item => `
           <div class="nav-item ${currentPage === item.id ? 'active' : ''}"
                onclick="navigateTo('${item.id}')"
@@ -93,15 +93,6 @@
           </div>
         `).join('')}
       </nav>
-      <div class="sidebar-footer">
-        <div style="font-size:9.5px;color:rgba(255,255,255,0.22);text-align:center;margin-bottom:7px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700">TIL / LANGUAGE</div>
-        <div class="lang-grid">
-          <button class="lang-btn ${currentLang === 'uz' ? 'active' : ''}" onclick="setLang('uz')">UZ</button>
-          <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" onclick="setLang('en')">EN</button>
-          <button class="lang-btn ${currentLang === 'ar' ? 'active' : ''}" onclick="setLang('ar')">عر</button>
-          <button class="lang-btn ${currentLang === 'tr' ? 'active' : ''}" onclick="setLang('tr')">TR</button>
-        </div>
-      </div>
     `;
   }
 
@@ -117,8 +108,6 @@
       <div class="topbar-left">
         <button id="toggle-sidebar" class="tb-toggle" onclick="toggleSidebar()" title="Menyuni yashirish">☰</button>
         <div class="breadcrumb">
-          <span>IBXI</span>
-          <span class="bc-sep">›</span>
           <span class="bc-current" id="breadcrumb-label">${DATA.i18n[currentLang].nav_home}</span>
         </div>
       </div>
@@ -138,13 +127,87 @@
           🔔
           ${unread > 0 ? `<span class="notif-dot" id="notif-badge">${unread}</span>` : ''}
         </button>
-        <button class="tb-btn" onclick="openReadingList()" title="${currentLang === 'uz' ? "O'qish ro'yxati" : 'Reading List'}" style="position:relative">
-          🔖
-          ${readingList.length > 0 ? `<span class="notif-dot" style="background:#10b981">${readingList.length}</span>` : ''}
-        </button>
-        <button class="tb-btn" onclick="openModal('about-modal')" title="${currentLang === 'uz' ? 'Haqida' : 'About'}">ℹ️</button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="tb-btn" onclick="toggleLangDropdown()" title="Til / Language">
+            ${currentLang.toUpperCase()}
+          </button>
+          <div class="lang-dropdown-menu" id="lang-dropdown-menu">
+            <button class="lang-dd-item ${currentLang === 'uz' ? 'active' : ''}" onclick="setLang('uz');closeLangDD()">
+              <span class="lang-dd-code">UZ</span><span class="lang-dd-name">O'zbekcha</span>
+            </button>
+            <button class="lang-dd-item ${currentLang === 'en' ? 'active' : ''}" onclick="setLang('en');closeLangDD()">
+              <span class="lang-dd-code">EN</span><span class="lang-dd-name">English</span>
+            </button>
+            <button class="lang-dd-item ${currentLang === 'ar' ? 'active' : ''}" onclick="setLang('ar');closeLangDD()">
+              <span class="lang-dd-code">عر</span><span class="lang-dd-name">العربية</span>
+            </button>
+            <button class="lang-dd-item ${currentLang === 'tr' ? 'active' : ''}" onclick="setLang('tr');closeLangDD()">
+              <span class="lang-dd-code">TR</span><span class="lang-dd-name">Türkçe</span>
+            </button>
+          </div>
+        </div>
       </div>
     `;
+  }
+
+  // ============================================
+  // FOOTER
+  // ============================================
+  function renderFooter() {
+    const footer = document.getElementById('site-footer');
+    if (!footer) return;
+    const isEn = currentLang === 'en';
+    const isTr = currentLang === 'tr';
+    const year = new Date().getFullYear();
+    footer.classList.toggle('collapsed', sidebarCollapsed);
+    footer.innerHTML = `
+      <div class="footer-inner">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <img src="assets/img/logo-gold.png" alt="Logo" style="width:32px;height:32px;object-fit:contain" />
+              <div>
+                <div style="font-size:14px;font-weight:700;color:var(--gold-300)">Imom Buxoriy</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.45)">ilmiy tadqiqot markazi</div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.7">
+              ${isEn ? 'An independent research center studying the intellectual heritage of Islamic civilization.'
+                : isTr ? 'İslam medeniyetinin entelektüel mirasını araştıran bağımsız bir araştırma merkezi.'
+                : 'Islom tsivilizatsiyasining intellektual merosini tadqiq qiluvchi mustaqil ilmiy-tadqiqot markazi.'}
+            </p>
+          </div>
+          <div class="footer-links">
+            <h4>${isEn ? 'Quick Links' : isTr ? 'Hızlı Bağlantılar' : 'Tezkor havolalar'}</h4>
+            <ul>
+              <li><a href="#" onclick="navigateTo('home');return false">${DATA.i18n[currentLang].nav_home}</a></li>
+              <li><a href="#" onclick="navigateTo('research');return false">${DATA.i18n[currentLang].nav_research}</a></li>
+              <li><a href="#" onclick="navigateTo('publications');return false">${DATA.i18n[currentLang].nav_publications}</a></li>
+              <li><a href="#" onclick="navigateTo('academy');return false">${DATA.i18n[currentLang].nav_academy}</a></li>
+            </ul>
+          </div>
+          <div class="footer-links">
+            <h4>${isEn ? 'Resources' : isTr ? 'Kaynaklar' : 'Resurslar'}</h4>
+            <ul>
+              <li><a href="#" onclick="navigateTo('blog');return false">${DATA.i18n[currentLang].nav_blog}</a></li>
+              <li><a href="#" onclick="navigateTo('gallery');return false">${DATA.i18n[currentLang].nav_gallery}</a></li>
+              <li><a href="#" onclick="navigateTo('archive');return false">${DATA.i18n[currentLang].nav_archive}</a></li>
+              <li><a href="#" onclick="navigateTo('contact');return false">${DATA.i18n[currentLang].nav_contact}</a></li>
+            </ul>
+          </div>
+          <div class="footer-links">
+            <h4>${isEn ? 'Contact' : isTr ? 'İletişim' : 'Aloqa'}</h4>
+            <ul>
+              <li style="color:rgba(255,255,255,.45);font-size:12.5px">Samarqand, O'zbekiston</li>
+              <li style="color:rgba(255,255,255,.45);font-size:12.5px">info@imambukhari.uz</li>
+              <li style="color:rgba(255,255,255,.45);font-size:12.5px">+998 66 233 00 00</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>&copy; ${year} Imom Buxoriy ilmiy tadqiqot markazi. ${DATA.i18n[currentLang].footer_rights}</span>
+        </div>
+      </div>`;
   }
 
   // ============================================
@@ -195,12 +258,22 @@
       document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
       document.getElementById('topbar').classList.toggle('collapsed', sidebarCollapsed);
       document.getElementById('main-content').classList.toggle('collapsed', sidebarCollapsed);
+      document.getElementById('site-footer')?.classList.toggle('collapsed', sidebarCollapsed);
     }
   };
 
   // ============================================
   // LANGUAGE
   // ============================================
+  window.toggleLangDropdown = function () {
+    const menu = document.getElementById('lang-dropdown-menu');
+    if (menu) menu.classList.toggle('show');
+  };
+  window.closeLangDD = function () {
+    const menu = document.getElementById('lang-dropdown-menu');
+    if (menu) menu.classList.remove('show');
+  };
+
   window.setLang = function (lang) {
     currentLang = lang;
     localStorage.setItem('ibxi_lang', lang);
@@ -209,6 +282,7 @@
     renderSidebar();
     renderTopbar();
     renderAllPages();
+    renderFooter();
     navigateTo(currentPage);
     showToast(
       lang === 'uz' ? "O'zbekcha tanlandi" :
@@ -246,6 +320,12 @@
     if (currentLang === 'ar' && arKey) return obj[arKey] || obj[uzKey];
     if (currentLang === 'tr' && trKey) return obj[trKey] || obj[uzKey];
     return obj[uzKey]; // default key used for Uzbek (uz) content
+  }
+
+  function formatDate(d) {
+    if (!d) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) { const [y,m,day] = d.split('-'); return day + '.' + m + '.' + y; }
+    return d;
   }
 
   // ============================================
@@ -442,7 +522,7 @@
   function renderFoundationPage() {
     const t = DATA.i18n[currentLang];
     const h = {
-      uz: { about:'Institut haqida', sub:'Imom Buxoriy Xalqaro Instituti – Missiya, Vazifa va Qadriyatlar',
+      uz: { about:'Institut haqida', sub:'Imom Buxoriy ilmiy tadqiqot markazi – Missiya, Vazifa va Qadriyatlar',
             mission:'Missiyamiz', vision:'Vazifamiz', values:'Asosiy qadriyatlar',
             history:'Tarixiy bosqichlar', team:'Tadqiqotchi jamoa' },
       en: { about:'About the Institute', sub:'Mission, Vision and Values',
@@ -459,7 +539,7 @@
       ? 'The IDE Foundation is an independent research institution established to research the methodological foundations of Islamic sciences, interpret the intellectual heritage of Islamic thought in a contemporary context, and train a new generation of researchers.'
       : currentLang==='tr'
       ? 'İmam Buhari Uluslararası Enstitüsü, İslam medeniyetinin entelektüel mirasını araştıran bağımsız bir araştırma kuruluşudur.'
-      : 'Imom Buxoriy Xalqaro Instituti — islom ilmlarining metodologik asoslarini tadqiq qilish, islom tafakkuri intellektual merosini zamonaviy kontekstda sharhlash va yangi avlod tadqiqotchilarni tayyorlash maqsadida tashkil etilgan mustaqil ilmiy-tadqiqot muassasasidir.';
+      : 'Imom Buxoriy ilmiy tadqiqot markazi — islom ilmlarining metodologik asoslarini tadqiq qilish, islom tafakkuri intellektual merosini zamonaviy kontekstda sharhlash va yangi avlod tadqiqotchilarni tayyorlash maqsadida tashkil etilgan mustaqil ilmiy-tadqiqot muassasasidir.';
 
     const visionText = currentLang==='ar'
       ? 'إعادة إنتاج الرصيد المعرفي للحضارة الإسلامية وفق المعايير الأكاديمية العالمية؛ والسعي إلى أن نكون مركزاً يطور الفكر الإسلامي بالاستناد إلى جذوره التقليدية والتحاور مع النقاشات المعاصرة.'
@@ -489,7 +569,7 @@
     ];
 
     const timeline = [
-      { date:'2009', uz:['Tashkil etilishi','Imom Buxoriy Xalqaro Instituti tashkil topildi. Birinchi tadqiqot dasturlari boshlandi.'],
+      { date:'2009', uz:['Tashkil etilishi','Imom Buxoriy ilmiy tadqiqot markazi tashkil topildi. Birinchi tadqiqot dasturlari boshlandi.'],
         en:['Foundation','Imam Bukhari International Institute established. First research programs launched.'] },
       { date:'2011', uz:['Akademiya','Tadqiqotchilarni tayyorlash dasturlari bilan Akademiya ishga tushirildi.'],
         en:['Academy','Academy launched with researcher training programs.'] },
@@ -1439,7 +1519,7 @@
       <div class="map-block mb-6">
         <div class="map-inner">
           <div class="map-pin">📍</div>
-          <h3>${isEn ? 'Imam Bukhari International Institute' : 'Imom Buxoriy Xalqaro Instituti'}</h3>
+          <h3>${isEn ? 'Imam Bukhari International Institute' : 'Imom Buxoriy ilmiy tadqiqot markazi'}</h3>
           <p>Samarqand, O'zbekiston</p>
           <button class="btn btn-gold" onclick="openMap()">
             🗺️ ${isEn ? 'Show on Map' : 'Xaritada ko\'rish'}
@@ -2147,6 +2227,12 @@
     document.addEventListener('click', (e) => {
       const searchBox = document.getElementById('search-container');
       if (searchBox && !searchBox.contains(e.target)) hideSearchDropdown();
+
+      const langDD = document.getElementById('lang-dropdown');
+      if (langDD && !langDD.contains(e.target)) {
+        const menu = document.getElementById('lang-dropdown-menu');
+        if (menu) menu.classList.remove('show');
+      }
 
       const modal = document.querySelector('.modal-backdrop.show');
       if (modal && e.target === modal) modal.classList.remove('show');

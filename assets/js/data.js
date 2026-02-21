@@ -1,5 +1,5 @@
 // ┌─────────────────────────────────────────────────────────────┐
-// │  IBXI – Imom Buxoriy Xalqaro Instituti  |  APPLICATION DATA │
+// │  IBXI – Imom Buxoriy ilmiy tadqiqot markazi  |  APPLICATION DATA │
 // │                                                             │
 // │  HOW TO EDIT THIS FILE:                                     │
 // │  • Each section is marked with ═══ SECTION NAME ═══         │
@@ -44,7 +44,7 @@ i18n: {
     "nav_archive": "Arxiv",
     "nav_contact": "Aloqa",
     "hero_title": "Islom tafakkurini anglash va rivojlantirish",
-    "hero_sub": "Imom Buxoriy Xalqaro Instituti — islom tsivilizatsiyasining intellektual merosini tadqiq qiluvchi va rivojlantiruvchi mustaqil ilmiy-tadqiqot muassasasidir.",
+    "hero_sub": "Imom Buxoriy ilmiy tadqiqot markazi — islom tsivilizatsiyasining intellektual merosini tadqiq qiluvchi va rivojlantiruvchi mustaqil ilmiy-tadqiqot muassasasidir.",
     "hero_btn1": "Tadqiqotlarimiz",
     "hero_btn2": "Akademiya dasturlari",
     "stat_researchers": "Tadqiqotchi",
