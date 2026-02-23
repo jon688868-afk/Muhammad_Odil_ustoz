@@ -12,6 +12,71 @@
   // sanitizeHTML used for trusted rich modal content built server-side; kept for future use
   // var sanitize = IBXI.Sanitize.sanitizeHTML;
 
+  // === SVG ICON LIBRARY ===
+  var _s = function(d,w){w=w||16;return '<svg width="'+w+'" height="'+w+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';};
+  var _i = function(d){return '<span class="ic">'+_s(d)+'</span>';};
+  var _il = function(d){return '<span class="ic-lg">'+_s(d,32)+'</span>';};
+  var _ix = function(d,w){return '<span class="ic-lg">'+_s(d,w||48)+'</span>';};
+
+  var IC = {
+    sun:       _s('<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>'),
+    moon:      _s('<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'),
+    search:    _s('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'),
+    check:     _s('<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'),
+    info:      _s('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'),
+    warn:      _s('<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'),
+    cal:       '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    calendar:  '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    clock:     '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    pen:       '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+    mapPin:    '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
+    barChart:  '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+    tag:       '<path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+    camera:    '<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>',
+    mic:       '<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    globe:     '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>',
+    book:      '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+    bookOpen:  '<path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>',
+    file:      '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    download:  '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    share:     '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+    bookmark:  '<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>',
+    mail:      '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+    phone:     '<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>',
+    map:       '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+    image:     '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+    play:      '<polygon points="5 3 19 12 5 21 5 3"/>',
+    bell:      '<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>',
+    grad:      '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 3 3 6 3s6-1 6-3v-5"/>',
+    building:  '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/>',
+    crown:     '<path d="M2 20h20"/><path d="M4 20l1-12 5 5 3-7 3 7 5-5 1 12"/>',
+    star:      '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    users:     '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+    handshake: '<path d="M11 17l-1 4-4-1 1-4"/><path d="M13 17l1 4 4-1-1-4"/><path d="M7 7l-2 5 4 1"/><path d="M17 7l2 5-4 1"/><path d="M9 12l3-3 3 3"/>',
+    seedling:  '<path d="M12 22V12"/><path d="M7 12c0-4 5-8 5-8s5 4 5 8"/><path d="M4 8c2-2 5-2 8 0"/><path d="M20 8c-2-2-5-2-8 0"/>',
+    mosque:    '<path d="M5 21V11l7-7 7 7v10"/><path d="M1 21h22"/><path d="M9 21v-4a3 3 0 016 0v4"/><path d="M12 4c0 0 3 2 3 5H9c0-3 3-5 3-5z"/>',
+    clipboard: '<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+    newspaper: '<path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><line x1="10" y1="6" x2="18" y2="6"/><line x1="10" y1="10" x2="18" y2="10"/><line x1="10" y1="14" x2="14" y2="14"/>',
+    pin:       '<path d="M15 4.5l-4 4L7 10l-1.5 1.5 7 7L14 17l1.5-3.5 4-4"/><line x1="9" y1="15" x2="4.5" y2="19.5"/><line x1="14.5" y1="4" x2="20" y2="9.5"/>',
+    mailbox:   '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/><path d="M2 20l7.05-7.05M22 20l-7.05-7.05"/>',
+    satellite: '<path d="M13 7L8.7 2.7a2.41 2.41 0 00-3.4 0L2.7 5.3a2.41 2.41 0 000 3.4L7 13"/><path d="M11 17l4.3 4.3c.94.94 2.46.94 3.4 0l2.6-2.6c.94-.94.94-2.46 0-3.4L17 11"/><line x1="8" y1="11" x2="13" y2="16"/><line x1="16" y1="2" x2="22" y2="8"/>',
+    plane:     '<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+    dollar:    '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>',
+    office:    '<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9.01" y2="6"/><line x1="15" y1="6" x2="15.01" y2="6"/><line x1="9" y1="10" x2="9.01" y2="10"/><line x1="15" y1="10" x2="15.01" y2="10"/><path d="M9 22v-4h6v4"/>',
+    megaphone: '<path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>',
+    twitter:   '<path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>',
+    youtube:   '<path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19.1C5.12 19.56 12 19.56 12 19.56s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/>',
+    instagram: '<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
+    facebook:  '<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>',
+    eye:       '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    scope:     '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>',
+    question:  '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    smartphone:'<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+    send:      '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+    award:     '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+    list:      '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+  };
+
   // === STATE ===
   var currentLang      = localStorage.getItem('ibxi_lang')  || 'uz';
   var currentPage      = 'home';
@@ -51,7 +116,7 @@
         if (loader) loader.classList.remove('show');
       }, 700);
       setTimeout(function () {
-        showToast('Imom Buxoriy ilmiy tadqiqot markazi ishga tushdi', 'info', 'ℹ️');
+        showToast('Imom Buxoriy ilmiy tadqiqot markazi ishga tushdi', 'info', IC.info);
       }, 800);
     } catch (err) {
       console.error('IBXI init error:', err);
@@ -118,8 +183,8 @@
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
     localStorage.setItem('ibxi_theme', darkMode ? 'dark' : 'light');
     var btn = document.getElementById('theme-toggle');
-    if (btn) btn.innerHTML = darkMode ? '☀️' : '🌙';
-    showToast(darkMode ? 'Qorong\'u mavzu faol' : 'Yorug\' mavzu faol', 'info', 'ℹ️');
+    if (btn) btn.innerHTML = darkMode ? IC.sun : IC.moon;
+    showToast(darkMode ? 'Qorong\'u mavzu faol' : 'Yorug\' mavzu faol', 'info', IC.info);
   }
 
   // ============================================
@@ -155,8 +220,12 @@
     }).join('');
 
     sidebar.innerHTML = '<div class="sidebar-logo">'
-      + '<img src="assets/img/logo-gold.png" alt="Logo" class="logo-mark" style="width:44px;height:44px;object-fit:contain" />'
-      + '<div class="logo-text"><span class="lt-main">IMOM BUXORIY</span><span class="lt-sub">ilmiy tadqiqot markazi</span></div>'
+      + '<img src="assets/img/logo.png" alt="Imom Buxoriy" class="logo-mark" />'
+      + '<div class="logo-text">'
+      + '<span class="lt-main">IMOM BUXORIY</span>'
+      + '<span class="lt-divider"></span>'
+      + '<span class="lt-sub">Ilmiy Tadqiqot Markazi</span>'
+      + '</div>'
       + '</div>'
       + '<nav class="sidebar-nav">' + navHTML + '</nav>';
   }
@@ -167,7 +236,7 @@
   function renderTopbar() {
     var topbar = document.getElementById('topbar');
     if (!topbar) return;
-    var themeIcon = darkMode ? '☀️' : '🌙';
+    var themeIcon = darkMode ? IC.sun : IC.moon;
     var searchPh  = currentLang === 'uz' ? 'Qidirish...' : currentLang === 'en' ? 'Search...' : currentLang === 'tr' ? 'Ara...' : 'بحث...';
     var themeTip  = currentLang === 'uz' ? 'Mavzuni almashtirish' : 'Toggle Theme';
 
@@ -176,7 +245,7 @@
       + '</div>'
       + '<div class="topbar-right">'
       + '<div class="search-wrap" id="search-container" style="position:relative">'
-      + '<div class="search-box"><span class="si">🔍</span>'
+      + '<div class="search-box"><span class="si">' + IC.search + '</span>'
       + '<input type="text" id="search-input" placeholder="' + escAttr(searchPh) + '" autocomplete="off" /></div>'
       + '<div class="search-results" id="search-results"></div>'
       + '</div>'
@@ -212,11 +281,13 @@
     var t = DATA.i18n[currentLang];
     footer.innerHTML = '<div class="footer-inner"><div class="footer-grid">'
       + '<div class="footer-brand">'
-      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
-      + '<img src="assets/img/logo-gold.png" alt="Logo" style="width:32px;height:32px;object-fit:contain" />'
-      + '<div><div style="font-size:14px;font-weight:700;color:var(--gold-300)">Imom Buxoriy</div>'
-      + '<div style="font-size:11px;color:rgba(255,255,255,.45)">ilmiy tadqiqot markazi</div></div>'
-      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+      + '<img src="assets/img/logo.png" alt="" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(228,183,58,.2))" />'
+      + '<div>'
+      + '<div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:1.4px">IMOM BUXORIY</div>'
+      + '<div style="width:20px;height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:3px 0 2px"></div>'
+      + '<div style="font-size:9px;font-weight:500;color:var(--gold);letter-spacing:1px;text-transform:uppercase;opacity:.8">Ilmiy Tadqiqot Markazi</div>'
+      + '</div></div>'
       + '<p style="font-size:12px;color:rgba(255,255,255,.45);line-height:1.7">' + esc(brandDesc) + '</p>'
       + '</div>'
       + '<div class="footer-links"><h4>' + esc(isEn ? 'Quick Links' : isTr ? 'Hızlı Bağlantılar' : 'Tezkor havolalar') + '</h4><ul>'
@@ -367,7 +438,7 @@
       lang === 'en' ? 'English selected' :
       lang === 'tr' ? 'Türkçe seçildi' :
       'تم اختيار العربية',
-      'success', '✅'
+      'success', _s(IC.check)
     );
   }
 
@@ -382,10 +453,10 @@
     var vids  = DATA.videos;
 
     var statItems = [
-      { icon:'👨‍🎓', sc:'sc-gold',   si:'si-gold',   num:48,  suffix:'',  label: t.stat_researchers },
-      { icon:'📚',   sc:'sc-blue',   si:'si-blue',   num:212, suffix:'',  label: t.stat_publications },
-      { icon:'🎤',   sc:'sc-green',  si:'si-green',  num:340, suffix:'+', label: t.stat_events },
-      { icon:'🕐',   sc:'sc-purple', si:'si-purple', num:15,  suffix:'',  label: t.stat_years },
+      { icon:_s(IC.grad,24),     sc:'sc-gold',   si:'si-gold',   num:48,  suffix:'',  label: t.stat_researchers },
+      { icon:_s(IC.book,24),     sc:'sc-blue',   si:'si-blue',   num:212, suffix:'',  label: t.stat_publications },
+      { icon:_s(IC.mic,24),      sc:'sc-green',  si:'si-green',  num:340, suffix:'+', label: t.stat_events },
+      { icon:_s(IC.clock,24),    sc:'sc-purple', si:'si-purple', num:15,  suffix:'',  label: t.stat_years },
     ];
 
     var seeAllNews = currentLang==='en' ? 'All News' : currentLang==='ar' ? 'كل الأخبار' : currentLang==='tr' ? 'Tüm Haberler' : 'Barcha yangiliklar';
@@ -414,7 +485,7 @@
         + '<span class="news-chip">' + esc(L(n,'tag','tag_en','tag_ar','tag_tr')) + '</span>'
         + '<h3>' + esc(L(n,'title','title_en','title_ar','title_tr')) + '</h3>'
         + '<p style="font-size:12px;color:var(--text-3);line-height:1.5;margin:6px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc(L(n,'summary','summary_en','summary_ar','summary_tr')) + '</p>'
-        + '<div class="news-meta"><span>📅 ' + esc(formatDate(n.date)) + '</span><span>• ' + esc(n.readTime || n.category) + '</span></div>'
+        + '<div class="news-meta"><span>' + _i(IC.calendar) + ' ' + esc(formatDate(n.date)) + '</span><span>• ' + esc(n.readTime || n.category) + '</span></div>'
         + '</div></div>';
     }).join('');
 
@@ -434,7 +505,7 @@
         + '<h3 style="font-size:15px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:8px">' + esc(L(b,'title','title_en','title_ar','title_tr')) + '</h3>'
         + '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px">' + esc(L(b,'excerpt','excerpt_en','excerpt_ar','excerpt_tr')) + '</p>'
         + '<div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-3)">'
-        + '<span>✍️ ' + esc(b.author) + '</span><span>⏱ ' + esc(b.readTime) + '</span>'
+        + '<span>' + _i(IC.pen) + ' ' + esc(b.author) + '</span><span>' + _i(IC.clock) + ' ' + esc(b.readTime) + '</span>'
         + '</div></div>';
     }).join('');
 
@@ -454,10 +525,10 @@
         + '<div class="event-date-box"><span class="eday">' + esc(e.day) + '</span><span class="emon">' + esc(L(e,'month','month_en','month_ar','month_tr')) + '</span></div>'
         + '<div class="event-info">'
         + '<h4>' + esc(L(e,'title','title_en','title_ar','title_tr')) + '</h4>'
-        + '<p>📍 ' + esc(e.location) + ' &nbsp; ⏰ ' + esc(e.time) + '</p>'
+        + '<p>' + _i(IC.mapPin) + ' ' + esc(e.location) + ' &nbsp; ' + _i(IC.clock) + ' ' + esc(e.time) + '</p>'
         + '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'
         + '<span class="event-tag ' + escAttr(e.type) + '">' + esc(e.type) + '</span>'
-        + (e.capacity ? '<span style="font-size:10px;color:var(--text-3)">👥 ' + esc(String(e.registered)) + '/' + esc(String(e.capacity)) + '</span>' : '')
+        + (e.capacity ? '<span style="font-size:10px;color:var(--text-3)">' + _i(IC.users) + ' ' + esc(String(e.registered)) + '/' + esc(String(e.capacity)) + '</span>' : '')
         + '</div></div></div>';
     }).join('');
 
@@ -474,7 +545,7 @@
         + '</div>'
         + '<div class="vid-info">'
         + '<div class="vi-title">' + esc(L(v,'title','title_en','title_ar','title_tr')) + '</div>'
-        + '<div class="vi-views">▶ ' + esc(String(v.views)) + ' ' + esc(viewsWord) + (v.speaker ? ' • ' + esc(v.speaker) : '') + '</div>'
+        + '<div class="vi-views">' + _i(IC.play) + ' ' + esc(String(v.views)) + ' ' + esc(viewsWord) + (v.speaker ? ' • ' + esc(v.speaker) : '') + '</div>'
         + '</div></div>';
     }).join('');
 
@@ -542,19 +613,19 @@
       : 'Islom tsivilizatsiyasining bilim boyligini universal akademik standartlarda qayta ishlab chiqarish; islom tafakkurini an\'anaviy ildizlaridan oziqlanib, zamonaviy munozaralar bilan dialog qurib rivojlantiruvchi markaz bo\'lish.';
 
     var coreValues = [
-      { icon:'📖', uz:['Ilmiy halollik','Har bir tadqiqotda akademik halollik va puxtalik'],
+      { icon:IC.bookOpen, uz:['Ilmiy halollik','Har bir tadqiqotda akademik halollik va puxtalik'],
         en:['Academic Integrity','Academic honesty and rigor in every research'],
         ar:['النزاهة العلمية','الأمانة الأكاديمية والدقة في كل بحث'],
         tr:['Akademik Dürüstlük','Her araştırmada akademik dürüstlük ve titizlik'] },
-      { icon:'🤝', uz:['Hamkorlik','Milliy va xalqaro olimlar bilan hamkorlik'],
+      { icon:IC.handshake, uz:['Hamkorlik','Milliy va xalqaro olimlar bilan hamkorlik'],
         en:['Collaboration','Collaboration with national and international scholars'],
         ar:['التعاون','التعاون مع الأكاديميين الوطنيين والدوليين'],
         tr:['İşbirliği','Ulusal ve uluslararası akademisyenlerle işbirliği'] },
-      { icon:'🌱', uz:['Yangilik','An\'anaviy bilimni zamonaviy usullar bilan uyg\'unlashtirish'],
+      { icon:IC.seedling, uz:['Yangilik','An\'anaviy bilimni zamonaviy usullar bilan uyg\'unlashtirish'],
         en:['Innovation','Bringing traditional knowledge together with modern methods'],
         ar:['الابتكار','الجمع بين المعرفة التقليدية والمناهج الحديثة'],
         tr:['Yenilik','Geleneksel bilgiyi modern yöntemlerle bir araya getirmek'] },
-      { icon:'🌍', uz:['Universallik','Butun insoniyatga qaratilgan keng qamrovli nuqtai nazar'],
+      { icon:IC.globe, uz:['Universallik','Butun insoniyatga qaratilgan keng qamrovli nuqtai nazar'],
         en:['Universality','A comprehensive perspective addressing all of humanity'],
         ar:['العالمية','منظور شامل يخاطب الإنسانية جمعاء'],
         tr:['Evrensellik','Tüm insanlığa hitap eden kapsamlı bir perspektif'] },
@@ -584,7 +655,7 @@
     var valuesHTML = coreValues.map(function (v) {
       var pair = currentLang==='en' ? v.en : currentLang==='ar' ? v.ar : currentLang==='tr' ? v.tr : v.uz;
       return '<div class="card card-hover" style="text-align:center">'
-        + '<div style="font-size:32px;margin-bottom:12px">' + v.icon + '</div>'
+        + '<div style="margin-bottom:12px;color:var(--gold);display:flex;justify-content:center">' + _s(v.icon,32) + '</div>'
         + '<h4 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px">' + esc(pair[0]) + '</h4>'
         + '<p style="font-size:12px;color:var(--text-2);line-height:1.6">' + esc(pair[1]) + '</p>'
         + '</div>';
@@ -619,10 +690,10 @@
     return '<div class="page" id="page-foundation">'
       + '<div class="page-hero"><h1>' + esc(h.about) + '</h1><p>' + esc(h.sub) + '</p></div>'
       + '<div class="g-2 mb-6">'
-      + '<div class="card card-hover"><div style="font-size:36px;margin-bottom:16px">🕌</div>'
+      + '<div class="card card-hover"><div style="margin-bottom:16px;color:var(--gold)">' + _s(IC.mosque,36) + '</div>'
       + '<h3 style="font-size:17px;font-weight:700;color:var(--gold);margin-bottom:12px">' + esc(h.mission) + '</h3>'
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.8">' + esc(missionText) + '</p></div>'
-      + '<div class="card card-hover"><div style="font-size:36px;margin-bottom:16px">🌟</div>'
+      + '<div class="card card-hover"><div style="margin-bottom:16px;color:var(--gold)">' + _s(IC.star,36) + '</div>'
       + '<h3 style="font-size:17px;font-weight:700;color:var(--gold);margin-bottom:12px">' + esc(h.vision) + '</h3>'
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.8">' + esc(visionText) + '</p></div>'
       + '</div>'
@@ -641,13 +712,13 @@
   function renderCorporatePage() {
     var isEn = currentLang === 'en';
     var boards = [
-      { icon:'👑',
+      { icon:IC.crown,
         uz:['Vasiylar kengashi','7 a\'zo','Institutning oliy qaror qabul qilish organi. Strategik yo\'nalishni belgilaydi va muhim qarorlarni tasdiqlaydi.'],
         en:['Board of Trustees','7 Members','The highest decision-making body of the foundation. Determines strategic direction and approves major decisions.'] },
-      { icon:'🏛️',
+      { icon:IC.building,
         uz:['Oliy maslahat kengashi','15 a\'zo','Milliy va xalqaro taniqli olimlardan tashkil topgan maslahat organi.'],
         en:['High Consultative Council','15 Members','An advisory body composed of nationally and internationally recognized scholars.'] },
-      { icon:'🎓',
+      { icon:IC.grad,
         uz:['Akademik kengash','12 a\'zo','Tadqiqot dasturlarini va akademik faoliyatlarni muvofiqlashtiradi.'],
         en:['Academic Board','12 Members','Coordinates research programs and academic activities.'] },
     ];
@@ -682,13 +753,13 @@
       var msgAttr = escAttr(year + ' ' + (isEn ? 'report downloading' : 'hisobot yuklab olinmoqda') + '...');
       return '<div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px">'
         + '<div style="display:flex;align-items:center;gap:14px">'
-        + '<span style="font-size:24px">📊</span>'
+        + '<span style="display:flex;color:var(--gold)">' + _s(IC.barChart,24) + '</span>'
         + '<div>'
         + '<div style="font-size:14px;font-weight:600;color:var(--text-1)">' + esc(isEn ? 'Annual Report' : 'Yillik hisobot') + ' ' + year + '</div>'
         + '<div style="font-size:12px;color:var(--text-3)">' + esc(isEn ? 'Summary of research, academy and institutional activities' : 'Tadqiqot, akademiya va muassasa faoliyati xulosasi') + '</div>'
         + '</div></div>'
         + '<button class="btn btn-gold btn-sm" data-action="download-report" data-msg="' + msgAttr + '">'
-        + esc(isEn ? '📥 Download' : '📥 Yuklab olish')
+        + _i(IC.download) + ' ' + esc(isEn ? 'Download' : 'Yuklab olish')
         + '</button></div>';
     }).join('');
 
@@ -755,7 +826,7 @@
         + '<div style="display:flex;align-items:center;gap:12px">'
         + '<div class="progress" style="flex:1"><div class="progress-bar" style="width:0%" data-width="' + p.prog + '"></div></div>'
         + '<span style="font-size:12px;color:var(--text-3);min-width:36px">' + p.prog + '%</span>'
-        + '<span style="font-size:12px;color:var(--text-3)">👥 ' + p.team + '</span>'
+        + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.users) + ' ' + p.team + '</span>'
         + '</div></div>';
     }).join('');
 
@@ -802,9 +873,9 @@
         + '</div>'
         + '<h3 style="font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:10px;line-height:1.4">' + esc(L(p,'title','title_en','title_ar','title_tr')) + '</h3>'
         + '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px">'
-        + '<div style="font-size:12px;color:var(--text-3)">⏱ ' + esc(p.duration) + ' &nbsp;|&nbsp; 📊 ' + esc(p.level) + '</div>'
-        + '<div style="font-size:12px;color:var(--text-3)">🌐 ' + esc(p.lang) + '</div>'
-        + '<div style="font-size:12px;color:var(--text-3)">👥 ' + p.students + ' ' + esc(studWord) + '</div>'
+        + '<div style="font-size:12px;color:var(--text-3)">' + _i(IC.clock) + ' ' + esc(p.duration) + ' &nbsp;|&nbsp; ' + _i(IC.barChart) + ' ' + esc(p.level) + '</div>'
+        + '<div style="font-size:12px;color:var(--text-3)">' + _i(IC.globe) + ' ' + esc(p.lang) + '</div>'
+        + '<div style="font-size:12px;color:var(--text-3)">' + _i(IC.users) + ' ' + p.students + ' ' + esc(studWord) + '</div>'
         + '</div>'
         + '<div class="progress"><div class="progress-bar" style="width:0%" data-width="' + pw + '"></div></div>'
         + '<button class="btn btn-gold w-full" style="margin-top:14px;font-size:12px" data-action="apply-program" data-id="' + p.id + '">' + esc(applyLabel) + '</button>'
@@ -816,7 +887,7 @@
         return '<div style="font-size:12.5px;color:var(--text-2);margin-bottom:6px;padding-left:12px;border-left:2px solid var(--gold)">• ' + esc(i) + '</div>';
       }).join('');
       return '<div style="padding:16px;background:var(--surface-2);border-radius:10px;border:1px solid var(--border-1)">'
-        + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">📌 ' + esc(m.month) + '</div>'
+        + '<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px">' + _i(IC.pin) + ' ' + esc(m.month) + '</div>'
         + itemsHTML + '</div>';
     }).join('');
 
@@ -850,19 +921,19 @@
       + '<p>' + esc(isEn ? 'Researcher training programs and courses' : isAr ? 'برامج تدريب الباحثين والدورات' : 'Tadqiqotchilarni tayyorlash dasturlari va kurslar') + '</p>'
       + '</div>'
       + '<div class="tabs-wrap" id="academy-tabs">'
-      + '<button class="tab-btn active" data-action="switch-tab" data-group="academy" data-tab="programs">📘 ' + esc(isEn ? 'Programs' : isAr ? 'البرامج' : 'Dasturlar') + '</button>'
-      + '<button class="tab-btn" data-action="switch-tab" data-group="academy" data-tab="schedule">📅 ' + esc(isEn ? 'Schedule' : isAr ? 'الجدول' : 'Taqvim') + '</button>'
-      + '<button class="tab-btn" data-action="switch-tab" data-group="academy" data-tab="apply">✍️ ' + esc(isEn ? 'Apply' : isAr ? 'التقديم' : 'Ariza') + '</button>'
-      + '<button class="tab-btn" data-action="switch-tab" data-group="academy" data-tab="faq">❓ ' + esc(isEn ? 'FAQ' : isAr ? 'الأسئلة' : 'TSS') + '</button>'
+      + '<button class="tab-btn active" data-action="switch-tab" data-group="academy" data-tab="programs">' + _i(IC.book) + ' ' + esc(isEn ? 'Programs' : isAr ? 'البرامج' : 'Dasturlar') + '</button>'
+      + '<button class="tab-btn" data-action="switch-tab" data-group="academy" data-tab="schedule">' + _i(IC.calendar) + ' ' + esc(isEn ? 'Schedule' : isAr ? 'الجدول' : 'Taqvim') + '</button>'
+      + '<button class="tab-btn" data-action="switch-tab" data-group="academy" data-tab="apply">' + _i(IC.pen) + ' ' + esc(isEn ? 'Apply' : isAr ? 'التقديم' : 'Ariza') + '</button>'
+      + '<button class="tab-btn" data-action="switch-tab" data-group="academy" data-tab="faq">' + _i(IC.question) + ' ' + esc(isEn ? 'FAQ' : isAr ? 'الأسئلة' : 'TSS') + '</button>'
       + '</div>'
       + '<div class="tab-content active" id="academy-programs"><div class="g-3">' + progHTML + '</div></div>'
       + '<div class="tab-content" id="academy-schedule"><div class="card">'
-      + '<h3 style="font-size:16px;font-weight:700;margin-bottom:20px;color:var(--gold)">📅 2025 ' + esc(isEn ? 'Education Calendar' : 'Ta\'lim taqvimi') + '</h3>'
+      + '<h3 style="font-size:16px;font-weight:700;margin-bottom:20px;color:var(--gold)">' + _i(IC.calendar) + ' 2025 ' + esc(isEn ? 'Education Calendar' : 'Ta\'lim taqvimi') + '</h3>'
       + '<div style="display:flex;flex-direction:column;gap:12px">' + schedHTML + '</div>'
       + '</div></div>'
       + '<div class="tab-content" id="academy-apply"><div class="g-2">'
       + '<div class="card">'
-      + '<h3 style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:20px">✍️ ' + esc(isEn ? 'Application Form' : isAr ? 'نموذج التقديم' : 'Ariza shakli') + '</h3>'
+      + '<h3 style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:20px">' + _i(IC.pen) + ' ' + esc(isEn ? 'Application Form' : isAr ? 'نموذج التقديم' : 'Ariza shakli') + '</h3>'
       + '<form data-form="application">'
       + '<div class="form-group"><label class="form-label">' + esc(isEn ? 'Full Name' : isAr ? 'الاسم الكامل' : 'Ism Familiya') + '</label>'
       + '<input class="form-input" type="text" placeholder="' + escAttr(isEn ? 'Your full name' : 'Ismingiz va familiyangiz') + '" required /></div>'
@@ -877,12 +948,12 @@
       + '<button type="submit" class="btn btn-gold w-full">' + esc(isEn ? 'Submit Application' : isAr ? 'إرسال الطلب' : 'Arizani yuborish') + '</button>'
       + '</form></div>'
       + '<div>'
-      + '<div class="card mb-4"><h4 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:14px">📋 ' + esc(isEn ? 'Requirements' : 'Ariza shartlari') + '</h4>'
+      + '<div class="card mb-4"><h4 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:14px">' + _i(IC.clipboard) + ' ' + esc(isEn ? 'Requirements' : 'Ariza shartlari') + '</h4>'
       + reqHTML + '</div>'
-      + '<div class="card"><h4 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:12px">📞 ' + esc(isEn ? 'Support' : 'Ariza yordami') + '</h4>'
+      + '<div class="card"><h4 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:12px">' + _i(IC.phone) + ' ' + esc(isEn ? 'Support' : 'Ariza yordami') + '</h4>'
       + '<p style="font-size:12.5px;color:var(--text-2);line-height:1.7">' + esc(isEn ? 'For questions about the application process, please contact the academy unit.' : 'Ariza jarayoni bo\'yicha savollaringiz uchun akademiya bo\'limiga murojaat qiling.') + '</p>'
-      + '<div style="margin-top:12px;font-size:13px;color:var(--text-1)">📧 academy@imambukhari.uz</div>'
-      + '<div style="font-size:13px;color:var(--text-1);margin-top:5px">📞 +998 XX XXX XX XX</div>'
+      + '<div style="margin-top:12px;font-size:13px;color:var(--text-1)">' + _i(IC.mail) + ' academy@imambukhari.uz</div>'
+      + '<div style="font-size:13px;color:var(--text-1);margin-top:5px">' + _i(IC.phone) + ' +998 XX XXX XX XX</div>'
       + '</div></div>'
       + '</div></div>'
       + '<div class="tab-content" id="academy-faq"><div style="max-width:720px">' + faqHTML + '</div></div>'
@@ -896,16 +967,16 @@
     var isEn = currentLang === 'en';
 
     var programs = [
-      { icon:'🌍',
+      { icon:_s(IC.globe,32),
         uz:['Mehmon olim','Xalqaro tadqiqotchilar uchun IBXI tarkibida ishlash imkoniyati. Muddatli arizalar qabul qilinadi.','Ochiq'],
         en:['Visiting Scholar','Opportunity for international researchers to work within IDE. Periodic applications are accepted.','Open'] },
-      { icon:'🤝',
+      { icon:_s(IC.handshake,32),
         uz:['Qo\'shma tadqiqot','Xorijiy universitet va institutlar bilan qo\'shma tadqiqot loyihalari va nashrlar.','Faol'],
         en:['Joint Research','Joint research projects and publications with universities and institutes abroad.','Active'] },
-      { icon:'🎓',
+      { icon:_s(IC.grad,32),
         uz:['Grant dasturi','Xalqaro talaba va tadqiqotchilar uchun grant imkoniyatlari va qo\'llab-quvvatlash dasturlari.','2025'],
         en:['Scholarship Program','Scholarship opportunities and support programs for international students and researchers.','2025'] },
-      { icon:'📡',
+      { icon:_s(IC.satellite,32),
         uz:['Xalqaro konferensiyalar','Yilda ikki marta o\'tkaziladigan xalqaro akademik konferensiyalar.','Yillik'],
         en:['International Conferences','International academic conferences held twice a year.','Annual'] },
     ];
@@ -922,12 +993,12 @@
     ];
 
     var programDetails = [
-      ['📅', isEn?'Duration':'Muddat',    isEn?'1–6 months':'1-6 oy'],
-      ['🏢', isEn?'Workspace':'Ish joyi', isEn?'Private office':'Shaxsiy ofis imkoniyati'],
-      ['📖', isEn?'Library':'Kutubxona',  isEn?'Full access':'To\'liq foydalanish'],
-      ['🤝', isEn?'Mentoring':'Mentorlik',isEn?'Senior researcher support':'Tajribali tadqiqotchi yordami'],
-      ['✈️', isEn?'Housing':'Turar joy',  isEn?'Recommendation list':'Tavsiya ro\'yxati beriladi'],
-      ['💰', isEn?'Grant':'Grant',         isEn?'For selected applicants':'Tanlangan arizachilar uchun'],
+      [_s(IC.calendar,20), isEn?'Duration':'Muddat',    isEn?'1–6 months':'1-6 oy'],
+      [_s(IC.office,20), isEn?'Workspace':'Ish joyi', isEn?'Private office':'Shaxsiy ofis imkoniyati'],
+      [_s(IC.bookOpen,20), isEn?'Library':'Kutubxona',  isEn?'Full access':'To\'liq foydalanish'],
+      [_s(IC.handshake,20), isEn?'Mentoring':'Mentorlik',isEn?'Senior researcher support':'Tajribali tadqiqotchi yordami'],
+      [_s(IC.plane,20), isEn?'Housing':'Turar joy',  isEn?'Recommendation list':'Tavsiya ro\'yxati beriladi'],
+      [_s(IC.dollar,20), isEn?'Grant':'Grant',         isEn?'For selected applicants':'Tanlangan arizachilar uchun'],
     ];
 
     var progMsg = escAttr(isEn ? 'Application form opening...' : 'Ariza shakli ochilmoqda...');
@@ -940,7 +1011,7 @@
         + '<span class="chip chip-gold" style="margin-top:5px;display:inline-flex">' + esc(arr[2]) + '</span></div>'
         + '</div>'
         + '<p style="font-size:13px;color:var(--text-2);line-height:1.7;margin-bottom:14px">' + esc(arr[1]) + '</p>'
-        + '<button class="btn btn-gold btn-sm" data-action="toast" data-msg="' + progMsg + '" data-type="info" data-icon="📋">'
+        + '<button class="btn btn-gold btn-sm" data-action="toast" data-msg="' + progMsg + '" data-type="info" data-icon="">'
         + esc(isEn ? 'Details' : 'Batafsil') + '</button>'
         + '</div>';
     }).join('');
@@ -999,9 +1070,9 @@
     var isEn  = currentLang === 'en';
 
     var journals = [
-      { name:'Islom tadqiqotlari jurnali', issues:28, freq: isEn?'Twice a Year':'Yilda 2 marta', icon:'📰' },
-      { name:'Akademiya byulleteni',        issues:15, freq: isEn?'3 Times a Year':'Yilda 3 marta', icon:'📋' },
-      { name:'Usul: Islom tadqiqotlari',    issues:42, freq: isEn?'Twice a Year':'Yilda 2 marta', icon:'📖' },
+      { name:'Islom tadqiqotlari jurnali', issues:28, freq: isEn?'Twice a Year':'Yilda 2 marta', icon:_s(IC.newspaper,24) },
+      { name:'Akademiya byulleteni',        issues:15, freq: isEn?'3 Times a Year':'Yilda 3 marta', icon:_s(IC.clipboard,24) },
+      { name:'Usul: Islom tadqiqotlari',    issues:42, freq: isEn?'Twice a Year':'Yilda 2 marta', icon:_s(IC.bookOpen,24) },
     ];
 
     var saveMsg   = escAttr(isEn ? 'Added to reading list' : 'O\'qish ro\'yxatiga qo\'shildi');
@@ -1014,7 +1085,7 @@
         + '<div style="font-size:12px;color:var(--text-3);margin-top:3px">' + j.issues + ' ' + esc(isEn ? 'Issues' : 'Son') + ' • ' + esc(j.freq) + '</div>'
         + '<div style="display:flex;gap:8px;margin-top:12px">'
         + '<button class="btn btn-gold btn-sm" data-action="toast" data-msg="' + viewMsg + '" data-type="info" data-icon="' + escAttr(j.icon) + '">' + esc(isEn ? 'View' : 'Ko\'rish') + '</button>'
-        + '<button class="btn btn-ghost btn-sm" data-action="toast" data-msg="' + saveMsg + '" data-type="success" data-icon="🔖">🔖 ' + esc(isEn ? 'Save' : 'Saqlash') + '</button>'
+        + '<button class="btn btn-ghost btn-sm" data-action="toast" data-msg="' + saveMsg + '" data-type="success" data-icon="">' + _i(IC.bookmark) + ' ' + esc(isEn ? 'Save' : 'Saqlash') + '</button>'
         + '</div></div></div></div>';
     }).join('');
 
@@ -1024,10 +1095,10 @@
       + '<p>' + esc(isEn ? '200+ academic books, articles and journals' : '200+ akademik kitob, maqola va jurnal') + '</p>'
       + '</div>'
       + '<div class="tabs-wrap" id="pub-tabs">'
-      + '<button class="tab-btn active" data-action="switch-tab" data-group="pub" data-tab="all">📚 ' + esc(isEn ? 'All' : 'Barchasi') + '</button>'
-      + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="books">📖 ' + esc(isEn ? 'Books' : 'Kitoblar') + '</button>'
-      + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="articles">📄 ' + esc(isEn ? 'Articles' : 'Maqolalar') + '</button>'
-      + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="journals">📰 ' + esc(isEn ? 'Journals' : 'Jurnallar') + '</button>'
+      + '<button class="tab-btn active" data-action="switch-tab" data-group="pub" data-tab="all">' + _i(IC.book) + ' ' + esc(isEn ? 'All' : 'Barchasi') + '</button>'
+      + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="books">' + _i(IC.bookOpen) + ' ' + esc(isEn ? 'Books' : 'Kitoblar') + '</button>'
+      + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="articles">' + _i(IC.file) + ' ' + esc(isEn ? 'Articles' : 'Maqolalar') + '</button>'
+      + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="journals">' + _i(IC.newspaper) + ' ' + esc(isEn ? 'Journals' : 'Jurnallar') + '</button>'
       + '</div>'
       + '<div class="tab-content active" id="pub-all">' + renderPubList(pubs) + '</div>'
       + '<div class="tab-content" id="pub-books">' + renderPubList(pubs.filter(function (p) { return p.type === 'Kitap'; })) + '</div>'
@@ -1058,17 +1129,17 @@
             + '<div class="pub-spine" style="' + spineStyle + '">' + spineContent + '</div>'
             + '<div class="pub-info">'
             + '<h4>' + esc(title) + '</h4>'
-            + '<div class="pub-author">✍️ ' + esc(p.author) + '</div>'
+            + '<div class="pub-author">' + _i(IC.pen) + ' ' + esc(p.author) + '</div>'
             + '<p class="pub-desc">' + esc(p.desc) + '</p>'
             + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
             + '<span class="chip chip-gold">' + esc(p.type) + '</span>'
-            + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(String(p.year)) + '</span>'
-            + (p.pages ? '<span style="font-size:11px;color:var(--text-3)">📄 ' + p.pages + ' ' + esc(pageWord) + '</span>' : '')
-            + (saved ? '<span class="chip chip-green">🔖 ' + esc(savedWord) + '</span>' : '')
+            + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(String(p.year)) + '</span>'
+            + (p.pages ? '<span style="font-size:11px;color:var(--text-3)">' + _i(IC.file) + ' ' + p.pages + ' ' + esc(pageWord) + '</span>' : '')
+            + (saved ? '<span class="chip chip-green">' + _i(IC.bookmark) + ' ' + esc(savedWord) + '</span>' : '')
             + '</div></div>'
             + '<div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;justify-content:center;flex-shrink:0">'
-            + '<button class="btn btn-gold btn-sm" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="📥">📥 PDF</button>'
-            + '<button class="btn btn-ghost btn-sm" data-action="save-reading" data-id="' + p.id + '">🔖 ' + esc(saved ? savedWord : saveWord) + '</button>'
+            + '<button class="btn btn-gold btn-sm" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="">' + _i(IC.download) + ' PDF</button>'
+            + '<button class="btn btn-ghost btn-sm" data-action="save-reading" data-id="' + p.id + '">' + _i(IC.bookmark) + ' ' + esc(saved ? savedWord : saveWord) + '</button>'
             + '</div></div>';
         }).join('')
       + '</div>';
@@ -1096,12 +1167,12 @@
         + '<div style="height:6px;background:linear-gradient(135deg,' + b.color + ',var(--gold));border-radius:3px;margin-bottom:16px"></div>'
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
         + '<span class="chip chip-gold" style="font-size:10px">' + esc(b.category) + '</span>'
-        + '<span style="font-size:11px;color:var(--text-3)">📅 ' + esc(formatDate(b.date)) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(formatDate(b.date)) + '</span>'
         + '</div>'
         + '<h3 style="font-size:15px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:8px">' + esc(L(b,'title','title_en','title_ar','title_tr')) + '</h3>'
         + '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px">' + esc(L(b,'excerpt','excerpt_en','excerpt_ar','excerpt_tr')) + '</p>'
         + '<div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text-3);border-top:1px solid var(--border-1);padding-top:12px">'
-        + '<span>✍️ ' + esc(b.author) + '</span><span>⏱ ' + esc(b.readTime) + '</span>'
+        + '<span>' + _i(IC.pen) + ' ' + esc(b.author) + '</span><span>' + _i(IC.clock) + ' ' + esc(b.readTime) + '</span>'
         + '</div></div>';
     }).join('');
 
@@ -1151,12 +1222,12 @@
       return '<div class="card card-hover gallery-card" data-cat="' + escAttr(g.category) + '" style="cursor:pointer;overflow:hidden;padding:0" data-action="open-gallery" data-id="' + g.id + '">'
         + '<div style="height:160px;' + bgStyle + 'display:flex;align-items:center;justify-content:center;position:relative">'
         + coverContent
-        + '<div style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px">📷 ' + g.count + '</div>'
+        + '<div style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.6);color:#fff;font-size:11px;padding:4px 10px;border-radius:20px">' + _i(IC.camera) + ' ' + g.count + '</div>'
         + '</div>'
         + '<div style="padding:14px 16px">'
         + '<span class="chip chip-gold" style="font-size:10px;margin-bottom:8px;display:inline-flex">' + esc(g.category) + '</span>'
         + '<h4 style="font-size:14px;font-weight:600;color:var(--text-1);line-height:1.4;margin-bottom:6px">' + esc(L(g,'title','title_en','title_ar','title_tr')) + '</h4>'
-        + '<div style="font-size:11px;color:var(--text-3)">📅 ' + esc(formatDate(g.date)) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(formatDate(g.date)) + '</div>'
         + '</div></div>';
     }).join('');
 
@@ -1213,7 +1284,7 @@
         + '<div style="flex:1">'
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
         + '<span class="chip chip-gold" style="font-size:10px">' + esc(L(n,'tag','tag_en','tag_ar','tag_tr')) + '</span>'
-        + '<span style="font-size:11px;color:var(--text-3)">📅 ' + esc(formatDate(n.date)) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(formatDate(n.date)) + '</span>'
         + '</div>'
         + '<h4 style="font-size:14px;font-weight:600;color:var(--text-1);line-height:1.5">' + esc(L(n,'title','title_en','title_ar','title_tr')) + '</h4>'
         + '</div>'
@@ -1227,7 +1298,7 @@
       + '<p>' + esc(isEn ? 'All news, events, publications and activities' : 'Barcha yangiliklar, tadbirlar, nashrlar va faoliyatlar') + '</p>'
       + '</div>'
       + '<div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap">'
-      + '<div class="search-box" style="width:280px;flex-shrink:0"><span class="si">🔍</span>'
+      + '<div class="search-box" style="width:280px;flex-shrink:0">' + '<span class="si">' + IC.search + '</span>' + ''
       + '<input type="text" id="archive-search-input" placeholder="' + escAttr(isEn ? 'Search news...' : 'Yangilik qidirish...') + '" /></div>'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap" id="archive-cat-buttons">' + catsHTML + '</div>'
       + '</div>'
@@ -1244,17 +1315,17 @@
     var isAr = currentLang === 'ar';
 
     var contactInfo = [
-      { icon:'📍', uz:['Manzil','Samarqand sh., O\'zbekiston'],          en:['Address','Samarkand, Uzbekistan'] },
-      { icon:'📞', uz:['Telefon','+998 XX XXX XX XX'],                   en:['Phone','+998 XX XXX XX XX'] },
-      { icon:'📧', uz:['E-pochta','info@imambukhari.uz'],                 en:['Email','info@imambukhari.uz'] },
-      { icon:'🕐', uz:['Ish vaqti','Dush–Jum: 09:00 – 18:00'],          en:['Working Hours','Mon–Fri: 09:00 – 18:00'] },
+      { icon:_s(IC.mapPin,20), uz:['Manzil','Samarqand sh., O\'zbekiston'],          en:['Address','Samarkand, Uzbekistan'] },
+      { icon:_s(IC.phone,20), uz:['Telefon','+998 XX XXX XX XX'],                   en:['Phone','+998 XX XXX XX XX'] },
+      { icon:_s(IC.mail,20), uz:['E-pochta','info@imambukhari.uz'],                 en:['Email','info@imambukhari.uz'] },
+      { icon:_s(IC.clock,20), uz:['Ish vaqti','Dush–Jum: 09:00 – 18:00'],          en:['Working Hours','Mon–Fri: 09:00 – 18:00'] },
     ];
 
     var socialLinks = [
-      { icon:'🐦', name:'X (Twitter)', handle:'@imambukhari_uz' },
-      { icon:'▶️', name:'YouTube',     handle:'Imom Buxoriy Instituti' },
-      { icon:'📘', name:'Facebook',    handle:'imambukhari.uz' },
-      { icon:'📸', name:'Instagram',   handle:'@imambukhari_uz' },
+      { icon:_s(IC.twitter,18), name:'X (Twitter)', handle:'@imambukhari_uz' },
+      { icon:_s(IC.youtube,18), name:'YouTube',     handle:'Imom Buxoriy Instituti' },
+      { icon:_s(IC.facebook,18), name:'Facebook',    handle:'imambukhari.uz' },
+      { icon:_s(IC.instagram,18), name:'Instagram',   handle:'@imambukhari_uz' },
     ];
 
     var subjectsEn  = ['General Info','Academy Programs','Publication Request','Partnership Proposal','Media'];
@@ -1282,7 +1353,7 @@
       + '</div>'
       + '<div class="g-2 mb-6">'
       + '<div class="card">'
-      + '<h3 style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:20px">✉️ ' + esc(isEn ? 'Send a Message' : isAr ? 'أرسل رسالة' : 'Bizga xabar yuboring') + '</h3>'
+      + '<h3 style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:20px">' + _i(IC.mail) + ' ' + esc(isEn ? 'Send a Message' : isAr ? 'أرسل رسالة' : 'Bizga xabar yuboring') + '</h3>'
       + '<form data-form="contact">'
       + '<div class="form-group"><label class="form-label">' + esc(isEn ? 'Full Name' : isAr ? 'الاسم الكامل' : 'Ismingiz') + '</label>'
       + '<input class="form-input" type="text" placeholder="' + escAttr(isEn ? 'Your full name' : isAr ? 'اسمك الكامل' : 'Ismingiz va familiyangiz') + '" required /></div>'
@@ -1296,17 +1367,17 @@
       + '</form></div>'
       + '<div style="display:flex;flex-direction:column;gap:12px">'
       + contactItemsHTML
-      + '<div class="card"><h4 style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:12px">📱 ' + esc(isEn ? 'Social Media' : 'Ijtimoiy tarmoqlar') + '</h4>'
+      + '<div class="card"><h4 style="font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:12px">' + _i(IC.smartphone) + ' ' + esc(isEn ? 'Social Media' : 'Ijtimoiy tarmoqlar') + '</h4>'
       + '<div class="social-row">' + socialHTML + '</div></div>'
       + '</div></div>'
       + '<div class="map-block mb-6"><div class="map-inner">'
-      + '<div class="map-pin">📍</div>'
+      + '<div class="map-pin">' + _s(IC.mapPin,32) + '</div>'
       + '<h3>' + esc(isEn ? 'Imam Bukhari International Institute' : 'Imom Buxoriy ilmiy tadqiqot markazi') + '</h3>'
       + '<p>Samarqand, O\'zbekiston</p>'
-      + '<button class="btn btn-gold" data-action="open-map">🗺️ ' + esc(isEn ? 'Show on Map' : 'Xaritada ko\'rish') + '</button>'
+      + '<button class="btn btn-gold" data-action="open-map">' + _i(IC.map) + ' ' + esc(isEn ? 'Show on Map' : 'Xaritada ko\'rish') + '</button>'
       + '</div></div>'
       + '<div class="newsletter-banner"><div class="nl-text">'
-      + '<h3>📬 ' + esc(isEn ? 'Subscribe to Newsletter' : 'Axborotnomamizga obuna bo\'ling') + '</h3>'
+      + '<h3>' + _i(IC.mailbox) + ' ' + esc(isEn ? 'Subscribe to Newsletter' : 'Axborotnomamizga obuna bo\'ling') + '</h3>'
       + '<p>' + esc(isEn ? 'Receive news about events and publications by email.' : 'Tadbirlar va nashrlar haqidagi yangiliklarni elektron pochta orqali oling.') + '</p>'
       + '</div>'
       + '<div class="nl-form">'
@@ -1327,7 +1398,7 @@
       ? '<div style="height:180px;border-radius:12px;overflow:hidden;margin-bottom:12px"><img src="' + escAttr(n.image) + '" alt="" style="width:100%;height:100%;object-fit:cover" /></div>'
       : '<div style="font-size:56px;margin-bottom:12px">' + n.icon + '</div>';
     var authorLine = n.author
-      ? '<div style="font-size:12px;color:var(--text-3);margin-top:8px">✍️ ' + esc(n.author) + (n.readTime ? ' • ⏱ ' + esc(n.readTime) : '') + '</div>'
+      ? '<div style="font-size:12px;color:var(--text-3);margin-top:8px">' + _i(IC.pen) + ' ' + esc(n.author) + (n.readTime ? ' • ' + _i(IC.clock) + ' ' + esc(n.readTime) : '') + '</div>'
       : '';
     var shareMsg = escAttr(isEn ? 'Sharing...' : 'Ulashilmoqda...');
     var allNewsLabel = esc(isEn ? 'All News' : 'Barcha yangiliklar');
@@ -1340,14 +1411,14 @@
       + '<span class="chip chip-gold">' + esc(L(n,'tag','tag_en','tag_ar','tag_tr')) + '</span></div>'
       + '<h2 style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:12px;line-height:1.4">' + esc(L(n,'title','title_en','title_ar','title_tr')) + '</h2>'
       + '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
-      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(formatDate(n.date)) + '</span>'
-      + '<span style="font-size:12px;color:var(--text-3)">🏷️ ' + esc(n.category) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(formatDate(n.date)) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.tag) + ' ' + esc(n.category) + '</span>'
       + '</div>'
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.8;margin-bottom:12px">' + (n.summary ? esc(L(n,'summary','summary_en','summary_ar','summary_tr')) : '') + '</p>'
       + '<p style="font-size:12.5px;color:var(--text-3);line-height:1.7">' + detailText + '</p>'
       + authorLine
       + '<div style="display:flex;gap:10px;margin-top:16px">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + shareMsg + '" data-type="info" data-icon="📤">📤 ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
+      + '<button class="btn btn-gold" data-action="toast" data-msg="' + shareMsg + '" data-type="info" data-icon="">' + _i(IC.share) + ' ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
       + '<button class="btn btn-ghost" data-action="navigate" data-page="archive">' + allNewsLabel + '</button>'
       + '</div>';
     openModal('news-modal');
@@ -1367,8 +1438,8 @@
       + '</div>'
       + '<p style="font-size:14px;color:var(--text-2);line-height:1.8;margin-bottom:16px">' + esc(L(a,'desc','desc_en','desc_ar','desc_tr')) + '</p>'
       + '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">'
-      + '<span class="chip chip-gold">📄 ' + a.count + ' ' + esc(isEn ? 'Studies' : 'Tadqiqot') + '</span>'
-      + '<span class="chip chip-blue">🔬 ' + esc(isEn ? 'Active Research' : 'Faol tadqiqot') + '</span>'
+      + '<span class="chip chip-gold">' + _i(IC.file) + ' ' + a.count + ' ' + esc(isEn ? 'Studies' : 'Tadqiqot') + '</span>'
+      + '<span class="chip chip-blue">' + _i(IC.scope) + ' ' + esc(isEn ? 'Active Research' : 'Faol tadqiqot') + '</span>'
       + '</div>'
       + '<div class="progress"><div class="progress-bar" style="width:' + pct + '%"></div></div>'
       + '<p style="font-size:12px;color:var(--text-3);margin-top:8px">' + esc(isEn ? 'Research intensity' : 'Tadqiqot intensivligi') + ': ' + pct + '%</p>'
@@ -1392,19 +1463,19 @@
       + '<span style="font-size:13px;font-weight:800;color:var(--gold-300);text-align:center;padding:6px;line-height:1.2">' + esc(p.abbr) + '</span>'
       + '</div><div>'
       + '<h2 style="font-size:17px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:8px">' + esc(isEn ? p.title_en : p.title) + '</h2>'
-      + '<div style="color:var(--gold);font-size:13px;margin-bottom:10px">✍️ ' + esc(p.author) + '</div>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip chip-gold">' + esc(p.type) + '</span><span class="chip chip-blue">📅 ' + esc(String(p.year)) + '</span></div>'
+      + '<div style="color:var(--gold);font-size:13px;margin-bottom:10px">' + _i(IC.pen) + ' ' + esc(p.author) + '</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip chip-gold">' + esc(p.type) + '</span><span class="chip chip-blue">' + _i(IC.calendar) + ' ' + esc(String(p.year)) + '</span></div>'
       + '</div></div>'
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.8;margin-bottom:14px">' + esc(isEn && p.desc_en ? p.desc_en : p.desc) + '</p>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;font-size:12px;color:var(--text-3)">'
-      + (p.pages    ? '<span>📄 ' + p.pages + ' ' + esc(isEn ? 'pages' : 'sahifa') + '</span>' : '')
-      + (p.language ? '<span>🌐 ' + esc(p.language) + '</span>' : '')
-      + (p.series   ? '<span>📚 ' + esc(p.series) + '</span>' : '')
+      + (p.pages    ? '<span>' + _i(IC.file) + ' ' + p.pages + ' ' + esc(isEn ? 'pages' : 'sahifa') + '</span>' : '')
+      + (p.language ? '<span>' + _i(IC.globe) + ' ' + esc(p.language) + '</span>' : '')
+      + (p.series   ? '<span>' + _i(IC.book) + ' ' + esc(p.series) + '</span>' : '')
       + '</div>'
       + tagsHTML
       + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="📥">📥 ' + esc(isEn ? 'Download PDF' : 'PDF yuklab olish') + '</button>'
-      + '<button class="btn btn-ghost" style="' + (saved ? 'border-color:#10b981;color:#10b981' : '') + '" data-action="save-reading" data-id="' + p.id + '">🔖 ' + esc(saved ? (isEn ? 'Saved' : 'Saqlangan') : (isEn ? 'Save' : 'Saqlash')) + '</button>'
+      + '<button class="btn btn-gold" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="">' + _i(IC.download) + ' ' + esc(isEn ? 'Download PDF' : 'PDF yuklab olish') + '</button>'
+      + '<button class="btn btn-ghost" style="' + (saved ? 'border-color:#10b981;color:#10b981' : '') + '" data-action="save-reading" data-id="' + p.id + '">' + _i(IC.bookmark) + ' ' + esc(saved ? (isEn ? 'Saved' : 'Saqlangan') : (isEn ? 'Save' : 'Saqlash')) + '</button>'
       + '</div>';
     openModal('news-modal');
   }
@@ -1416,10 +1487,10 @@
     var statusLabel = p.status === 'active' ? (isEn ? 'Active' : 'Faol') : (isEn ? 'Upcoming' : 'Tez kunda');
     var statusChip  = p.status === 'active' ? 'chip-green' : 'chip-blue';
     var details = [
-      ['⏱', isEn ? 'Duration' : 'Muddat',   p.duration],
-      ['📊', isEn ? 'Level' : 'Daraja',      p.level],
-      ['🌐', isEn ? 'Language' : 'Til',      p.lang],
-      ['👥', isEn ? 'Enrolled' : 'Ro\'yxatdan o\'tgan', p.students + (isEn ? ' students' : ' talaba')],
+      [_s(IC.clock,20), isEn ? 'Duration' : 'Muddat',   p.duration],
+      [_s(IC.barChart,20), isEn ? 'Level' : 'Daraja',      p.level],
+      [_s(IC.globe,20), isEn ? 'Language' : 'Til',      p.lang],
+      [_s(IC.users,20), isEn ? 'Enrolled' : 'Ro\'yxatdan o\'tgan', p.students + (isEn ? ' students' : ' talaba')],
     ];
     var detHTML = details.map(function (d) {
       return '<div style="padding:14px;background:var(--surface-2);border-radius:10px;text-align:center;border:1px solid var(--border-1)">'
@@ -1436,7 +1507,7 @@
       + '<span class="chip ' + statusChip + '" style="margin-top:10px;display:inline-flex">' + esc(statusLabel) + '</span>'
       + '</div>'
       + '<div class="g-2" style="margin-bottom:20px">' + detHTML + '</div>'
-      + '<button class="btn btn-gold w-full" data-action="apply-program" data-id="' + p.id + '">✍️ ' + esc(isEn ? 'Apply to Program' : 'Dasturga ariza berish') + '</button>';
+      + '<button class="btn btn-gold w-full" data-action="apply-program" data-id="' + p.id + '">' + _i(IC.pen) + ' ' + esc(isEn ? 'Apply to Program' : 'Dasturga ariza berish') + '</button>';
     openModal('news-modal');
   }
 
@@ -1456,25 +1527,25 @@
       ? '<p style="font-size:13px;color:var(--text-2);line-height:1.7;margin-bottom:14px">' + esc(L(v,'description','description_en','description_ar','description_tr')) + '</p>'
       : '';
     var catChip    = v.category ? '<span class="chip chip-gold">' + esc(v.category) + '</span>' : '';
-    var spkLine    = v.speaker  ? '<span style="font-size:12px;color:var(--text-3)">🎤 ' + esc(v.speaker) + '</span>' : '';
+    var spkLine    = v.speaker  ? '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.mic) + ' ' + esc(v.speaker) + '</span>' : '';
     var watchLabel = esc(isEn ? 'Watch Video' : 'Videoni ko\'rish');
 
     document.getElementById('modal-content').innerHTML =
-      '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:16px">▶️ ' + esc(L(v,'title','title_en','title_ar','title_tr')) + '</h3>'
+      '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:16px">' + _i(IC.play) + ' ' + esc(L(v,'title','title_en','title_ar','title_tr')) + '</h3>'
       + '<div style="background:linear-gradient(135deg,var(--navy-800),var(--navy-600));border-radius:14px;height:220px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;position:relative;overflow:hidden">'
       + thumbContent
       + '<div style="text-align:center;position:relative;z-index:1">' + emojiContent
       + '<div style="width:60px;height:60px;background:rgba(228,183,58,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;cursor:pointer;box-shadow:0 4px 20px rgba(228,183,58,.5)"'
-      + ' data-action="toast" data-msg="' + ytMsg + '" data-type="info" data-icon="▶️">'
+      + ' data-action="toast" data-msg="' + ytMsg + '" data-type="info" data-icon="">'
       + '<span style="font-size:22px;margin-left:4px;color:#061a12;font-weight:800">▶</span>'
       + '</div></div></div>'
       + descHTML
       + '<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap">'
-      + '<span class="chip chip-gray">⏱ ' + esc(v.duration) + '</span>'
-      + '<span class="chip chip-gray">👁 ' + esc(String(v.views)) + '</span>'
+      + '<span class="chip chip-gray">' + _i(IC.clock) + ' ' + esc(v.duration) + '</span>'
+      + '<span class="chip chip-gray">' + _i(IC.eye) + ' ' + esc(String(v.views)) + '</span>'
       + catChip + spkLine
       + '</div>'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + ytMsg + '" data-type="info" data-icon="▶️">' + watchLabel + '</button>';
+      + '<button class="btn btn-gold" data-action="toast" data-msg="' + ytMsg + '" data-type="info" data-icon="">' + watchLabel + '</button>';
     openModal('news-modal');
   }
 
@@ -1488,10 +1559,10 @@
       ? '<p style="font-size:13px;color:var(--text-2);line-height:1.7;margin-bottom:16px">' + esc(L(e,'description','description_en','description_ar','description_tr')) + '</p>'
       : '';
     var infoRows = [
-      ['📍', isEn ? 'Location' : 'Joylashuv', e.location],
-      ['⏰', isEn ? 'Time'     : 'Vaqt',      e.time],
+      [_s(IC.mapPin,20), isEn ? 'Location' : 'Joylashuv', e.location],
+      [_s(IC.clock,20), isEn ? 'Time'     : 'Vaqt',      e.time],
     ];
-    if (e.speaker) infoRows.push(['🎤', isEn ? 'Speaker' : 'Ma\'ruzachi', e.speaker]);
+    if (e.speaker) infoRows.push([_s(IC.mic,20), isEn ? 'Speaker' : 'Ma\'ruzachi', e.speaker]);
     var infoHTML = infoRows.map(function (d) {
       return '<div style="display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-1)">'
         + '<span style="font-size:18px">' + d[0] + '</span>'
@@ -1501,7 +1572,7 @@
     }).join('');
     var capHTML = e.capacity
       ? '<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:6px">'
-        + '<span>👥 ' + e.registered + '/' + e.capacity + ' ' + esc(isEn ? 'registered' : 'ro\'yxatdan o\'tgan') + '</span>'
+        + '<span>' + _i(IC.users) + ' ' + e.registered + '/' + e.capacity + ' ' + esc(isEn ? 'registered' : 'ro\'yxatdan o\'tgan') + '</span>'
         + '<span>' + Math.round(e.registered / e.capacity * 100) + '%</span></div>'
         + '<div class="progress"><div class="progress-bar" style="width:' + Math.round(e.registered / e.capacity * 100) + '%"></div></div>'
         + '</div>'
@@ -1518,8 +1589,8 @@
       + '</div>'
       + descHTML + infoHTML + capHTML
       + '<div style="display:flex;gap:10px;margin-top:18px">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + regMsg + '" data-type="success" data-icon="✅">✅ ' + esc(isEn ? 'Register' : 'Ro\'yxatdan o\'tish') + '</button>'
-      + '<button class="btn btn-ghost" data-action="toast" data-msg="' + calMsg + '" data-type="info" data-icon="📅">📅 ' + esc(isEn ? 'Add to Calendar' : 'Taqvimga qo\'shish') + '</button>'
+      + '<button class="btn btn-gold" data-action="toast" data-msg="' + regMsg + '" data-type="success" data-icon="">' + _i(IC.check) + ' ' + esc(isEn ? 'Register' : 'Ro\'yxatdan o\'tish') + '</button>'
+      + '<button class="btn btn-ghost" data-action="toast" data-msg="' + calMsg + '" data-type="info" data-icon="">' + _i(IC.calendar) + ' ' + esc(isEn ? 'Add to Calendar' : 'Taqvimga qo\'shish') + '</button>'
       + '</div>';
     openModal('news-modal');
   }
@@ -1533,7 +1604,7 @@
       ? '<p style="font-size:13px;color:var(--text-2);line-height:1.8;margin-bottom:16px;text-align:center">' + esc(L(m,'bio','bio_en','bio_ar','bio_tr')) + '</p>'
       : '';
     var eduHTML = m.education
-      ? '<div style="font-size:12px;color:var(--text-3);margin-bottom:12px;text-align:center">🎓 ' + esc(m.education) + '</div>'
+      ? '<div style="font-size:12px;color:var(--text-3);margin-bottom:12px;text-align:center">' + _i(IC.grad) + ' ' + esc(m.education) + '</div>'
       : '';
     var specHTML = m.specialization
       ? '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:16px">'
@@ -1556,7 +1627,7 @@
       + '<div style="color:var(--text-3);font-size:12px;margin-top:3px">' + esc(L(m,'dept','dept_en','dept_ar','dept_tr')) + '</div>'
       + '</div>'
       + bioHTML + eduHTML + specHTML
-      + '<button class="btn btn-gold w-full" data-action="toast" data-msg="' + contMsg + '" data-type="info" data-icon="✉️">✉️ ' + esc(isEn ? 'Contact' : 'Aloqa qilish') + '</button>';
+      + '<button class="btn btn-gold w-full" data-action="toast" data-msg="' + contMsg + '" data-type="info" data-icon="">' + _i(IC.mail) + ' ' + esc(isEn ? 'Contact' : 'Aloqa qilish') + '</button>';
     openModal('news-modal');
   }
 
@@ -1573,16 +1644,16 @@
       '<div style="margin-bottom:16px">'
       + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
       + '<span class="chip chip-gold">' + esc(b.category) + '</span>'
-      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(formatDate(b.date)) + '</span>'
-      + '<span style="font-size:12px;color:var(--text-3)">⏱ ' + esc(b.readTime) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(formatDate(b.date)) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.clock) + ' ' + esc(b.readTime) + '</span>'
       + '</div>'
       + '<h2 style="font-size:18px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:12px">' + esc(L(b,'title','title_en','title_ar','title_tr')) + '</h2>'
-      + '<div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:16px">✍️ ' + esc(b.author) + '</div>'
+      + '<div style="font-size:13px;color:var(--gold);font-weight:600;margin-bottom:16px">' + _i(IC.pen) + ' ' + esc(b.author) + '</div>'
       + '</div>'
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.9;margin-bottom:16px">' + esc(L(b,'excerpt','excerpt_en','excerpt_ar','excerpt_tr')) + '</p>'
       + tagsHTML
       + '<div style="display:flex;gap:10px">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + shareMsg + '" data-type="info" data-icon="📤">📤 ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
+      + '<button class="btn btn-gold" data-action="toast" data-msg="' + shareMsg + '" data-type="info" data-icon="">' + _i(IC.share) + ' ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
       + '<button class="btn btn-ghost" data-action="navigate" data-page="blog">' + esc(isEn ? 'All Articles' : 'Barcha maqolalar') + '</button>'
       + '</div>';
     openModal('news-modal');
@@ -1601,14 +1672,14 @@
     document.getElementById('modal-content').innerHTML =
       '<div style="height:200px;' + bgStyle + 'border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;position:relative;overflow:hidden">'
       + coverContent
-      + '<div style="position:absolute;bottom:12px;right:16px;background:rgba(0,0,0,0.6);color:#fff;font-size:12px;padding:5px 12px;border-radius:20px">📷 ' + g.count + ' ' + esc(isEn ? 'photos' : 'surat') + '</div>'
+      + '<div style="position:absolute;bottom:12px;right:16px;background:rgba(0,0,0,0.6);color:#fff;font-size:12px;padding:5px 12px;border-radius:20px">' + _i(IC.camera) + ' ' + g.count + ' ' + esc(isEn ? 'photos' : 'surat') + '</div>'
       + '</div>'
       + '<h2 style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:10px">' + esc(L(g,'title','title_en','title_ar','title_tr')) + '</h2>'
       + '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
       + '<span class="chip chip-gold">' + esc(g.category) + '</span>'
-      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(formatDate(g.date)) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">' + _i(IC.calendar) + ' ' + esc(formatDate(g.date)) + '</span>'
       + '</div>'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + galMsg + '" data-type="info" data-icon="🖼️">🖼️ ' + esc(isEn ? 'View Gallery' : 'Galereyani ko\'rish') + '</button>';
+      + '<button class="btn btn-gold" data-action="toast" data-msg="' + galMsg + '" data-type="info" data-icon="">' + _i(IC.image) + ' ' + esc(isEn ? 'View Gallery' : 'Galereyani ko\'rish') + '</button>';
     openModal('news-modal');
   }
 
@@ -1632,10 +1703,10 @@
     if (badge) badge.remove();
 
     var notifications = [
-      { icon:'📢', msg:'Akademiya Bahor semestri uchun arizalar qabul qilinmoqda', msg_en:'Academy Spring term applications are open',         time:'2 soat', read:false },
-      { icon:'📚', msg:'Yangi nashr: Kalom tarixi kitobi mavjud',                  msg_en:'New publication: Kalam History book available',        time:'1 kun', read:false },
-      { icon:'🎤', msg:'Xalqaro simpozium uchun ro\'yxatga olish boshlandi',         msg_en:'International symposium registrations have started',   time:'3 kun', read:false },
-      { icon:'✅', msg:'Arizangiz qabul qilindi va ko\'rib chiqilmoqda',            msg_en:'Your application was received and is under review',    time:'1 hafta', read:true },
+      { icon:_s(IC.megaphone,20), msg:'Akademiya Bahor semestri uchun arizalar qabul qilinmoqda', msg_en:'Academy Spring term applications are open',         time:'2 soat', read:false },
+      { icon:_s(IC.book,20), msg:'Yangi nashr: Kalom tarixi kitobi mavjud',                  msg_en:'New publication: Kalam History book available',        time:'1 kun', read:false },
+      { icon:_s(IC.mic,20), msg:'Xalqaro simpozium uchun ro\'yxatga olish boshlandi',         msg_en:'International symposium registrations have started',   time:'3 kun', read:false },
+      { icon:_s(IC.check,20), msg:'Arizangiz qabul qilindi va ko\'rib chiqilmoqda',            msg_en:'Your application was received and is under review',    time:'1 hafta', read:true },
     ];
 
     var agoPfx = currentLang === 'en' ? 'ago' : currentLang === 'tr' ? 'önce' : 'oldin';
@@ -1652,7 +1723,7 @@
 
     var hdr = currentLang === 'en' ? 'Notifications' : currentLang === 'tr' ? 'Bildirimler' : 'Bildirishnomalar';
     document.getElementById('modal-content').innerHTML =
-      '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:16px">🔔 ' + esc(hdr) + '</h3>'
+      '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:16px">' + _i(IC.bell) + ' ' + esc(hdr) + '</h3>'
       + ntfHTML;
     openModal('news-modal');
   }
@@ -1666,13 +1737,13 @@
       readingList.splice(idx, 1);
       showToast(
         currentLang === 'en' ? 'Removed from reading list' : currentLang === 'tr' ? 'Okuma listesinden çıkarıldı' : 'O\'qish ro\'yxatidan o\'chirildi',
-        'info', '🔖'
+        'info', _s(IC.bookmark)
       );
     } else {
       readingList.push(id);
       showToast(
         currentLang === 'en' ? 'Added to reading list' : currentLang === 'tr' ? 'Okuma listesine eklendi' : 'O\'qish ro\'yxatiga qo\'shildi',
-        'success', '🔖'
+        'success', _s(IC.bookmark)
       );
     }
     localStorage.setItem('ibxi_reading', JSON.stringify(readingList));
@@ -1681,14 +1752,14 @@
   function openReadingList() {
     var isEn  = currentLang === 'en';
     var saved = DATA.publications.filter(function (p) { return readingList.indexOf(p.id) !== -1; });
-    var header = '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:16px">🔖 '
+    var header = '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:16px">' + _i(IC.bookmark) + ' '
       + esc(isEn ? 'Reading List' : 'O\'qish ro\'yxatim')
       + (saved.length > 0 ? '<span class="chip chip-gold" style="margin-left:8px;vertical-align:middle">' + saved.length + '</span>' : '')
       + '</h3>';
     var bodyHTML;
     if (saved.length === 0) {
       bodyHTML = '<div style="text-align:center;padding:32px;color:var(--text-3)">'
-        + '<div style="font-size:40px;margin-bottom:12px">📚</div>'
+        + '<div style="display:flex;align-items:center;justify-content:center;color:var(--gold);margin-bottom:12px">' + _s(IC.book,40) + '</div>'
         + '<p>' + esc(isEn ? 'Your reading list is empty.' : 'O\'qish ro\'yxatingiz bo\'sh.') + '</p>'
         + '<button class="btn btn-gold" style="margin-top:16px" data-action="navigate" data-page="publications">'
         + esc(isEn ? 'Browse Publications' : 'Nashrlarni ko\'rish') + '</button>'
@@ -1751,13 +1822,13 @@
         return { icon: a.icon, title: L(a,'title','title_en','title_ar','title_tr'), cat: 'Tadqiqot', page: 'research' };
       }),
       DATA.publications.map(function (p) {
-        return { icon: '📚', title: currentLang === 'en' ? p.title_en : currentLang === 'tr' ? (p.title_tr || p.title) : p.title, cat: 'Nashr', page: 'publications' };
+        return { icon: _s(IC.book,16), title: currentLang === 'en' ? p.title_en : currentLang === 'tr' ? (p.title_tr || p.title) : p.title, cat: 'Nashr', page: 'publications' };
       }),
       DATA.programs.map(function (p) {
         return { icon: p.icon, title: L(p,'title','title_en','title_ar','title_tr'), cat: 'Akademiya', page: 'academy' };
       }),
       DATA.blogPosts.map(function (b) {
-        return { icon: '✏️', title: L(b,'title','title_en','title_ar','title_tr'), cat: 'Blog', page: 'blog', id: b.id };
+        return { icon: _s(IC.pen,16), title: L(b,'title','title_en','title_ar','title_tr'), cat: 'Blog', page: 'blog', id: b.id };
       }),
       DATA.gallery.map(function (g) {
         return { icon: g.icon, title: L(g,'title','title_en','title_ar','title_tr'), cat: 'Galereya', page: 'gallery' };
@@ -1871,7 +1942,7 @@
       setTimeout(function () {
         btn.disabled  = false;
         btn.textContent = origText;
-        showToast(t.form_success, 'success', '✅');
+        showToast(t.form_success, 'success', _s(IC.check));
         form.reset();
       }, 1200);
     }
@@ -1883,7 +1954,7 @@
       currentLang === 'en' ? 'Application received! You will be notified by email.'
       : currentLang === 'tr' ? 'Başvurunuz alındı! E-posta ile bilgilendirileceksiniz.'
       : 'Arizangiz qabul qilindi! Natija elektron pochta orqali bildiriladi.',
-      'success', '🎓'
+      'success', _s(IC.grad)
     );
     e.target.reset();
   }
@@ -1894,7 +1965,7 @@
       currentLang === 'en' ? 'Visiting Scholar application received!'
       : currentLang === 'tr' ? 'Ziyaretçi Akademisyen başvurunuz alındı!'
       : 'Mehmon olim arizangiz qabul qilindi!',
-      'success', '🌍'
+      'success', _s(IC.globe)
     );
     e.target.reset();
   }
@@ -1905,7 +1976,7 @@
     var name = currentLang === 'en' ? p.title_en : currentLang === 'tr' ? (p.title_tr || p.title) : p.title;
     showToast(
       '"' + name + '" ' + (currentLang === 'en' ? 'application submitted!' : currentLang === 'tr' ? 'başvurunuz alındı!' : 'dasturiga arizangiz qabul qilindi!'),
-      'success', '✅'
+      'success', _s(IC.check)
     );
     navigateTo('academy');
     setTimeout(function () { switchTab('academy', 'apply'); }, 200);
@@ -1916,19 +1987,19 @@
     if (input && input.value.indexOf('@') === -1) {
       showToast(
         currentLang === 'en' ? 'Please enter a valid email.' : currentLang === 'tr' ? 'Lütfen geçerli bir e-posta girin.' : 'To\'g\'ri elektron pochta manzilini kiriting.',
-        'warning', '⚠️'
+        'warning', IC.warn
       );
       return;
     }
     showToast(
       currentLang === 'en' ? 'Successfully subscribed to our newsletter!' : currentLang === 'tr' ? 'Bültenimize başarıyla abone oldunuz!' : 'Axborotnomamizga muvaffaqiyatli obuna bo\'ldingiz!',
-      'success', '📬'
+      'success', _s(IC.mailbox)
     );
     if (input) input.value = '';
   }
 
   function openMap() {
-    showToast(currentLang === 'en' ? 'Opening map...' : currentLang === 'tr' ? 'Harita açılıyor...' : 'Xarita ochilmoqda...', 'info', '🗺️');
+    showToast(currentLang === 'en' ? 'Opening map...' : currentLang === 'tr' ? 'Harita açılıyor...' : 'Xarita ochilmoqda...', 'info', _s(IC.map));
     setTimeout(function () { window.open('https://maps.google.com?q=Samarqand+Uzbekistan', '_blank'); }, 400);
   }
 
@@ -1989,7 +2060,7 @@
   // ============================================
   function showToast(msg, type, icon) {
     type = type || 'info';
-    icon = icon || 'ℹ️';
+    icon = icon || IC.info;
     var container = document.getElementById('toast-container');
     if (!container) return;
     var toast = document.createElement('div');
@@ -2156,10 +2227,10 @@
             applyProgram(+el.dataset.id);
             break;
           case 'toast':
-            showToast(el.dataset.msg || '', el.dataset.type || 'info', el.dataset.icon || 'ℹ️');
+            showToast(el.dataset.msg || '', el.dataset.type || 'info', el.dataset.icon || IC.info);
             break;
           case 'download-report':
-            showToast(el.dataset.msg || '', 'info', '📥');
+            showToast(el.dataset.msg || '', 'info', _s(IC.download));
             break;
         }
       } catch (err) {
