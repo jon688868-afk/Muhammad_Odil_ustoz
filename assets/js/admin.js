@@ -1,7 +1,7 @@
 // ============================================
-// IBXI Admin Panel – Content Management System
+// IBXI Admin Panel – Content Management System v2.0
 // Full CRUD for all 12 data sections
-// Clean SVG icon system, no emoji
+// Security: CSRF tokens, escaped output, event delegation
 // ============================================
 
 (function () {
@@ -41,9 +41,9 @@
     chat:       '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2h12a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 3V3a1 1 0 011-1z"/></svg>',
     image:      '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1"/><circle cx="5.5" cy="5.5" r="1"/><path d="M14 10l-3-3-7 7"/></svg>',
     empty:      '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>',
+    activity:   '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5 8 4.5 8 6 4 8 12 10 6 11.5 8 14.5 8"/></svg>',
   };
 
-  // Section key → icon key mapping
   const SI = {
     news:'news', researchAreas:'research', events:'calendar',
     publications:'book', team:'users', programs:'academic',
@@ -53,6 +53,7 @@
 
   // === STATE ===
   let authToken = sessionStorage.getItem('ibxi_admin_token') || null;
+  let csrfToken = sessionStorage.getItem('ibxi_csrf_token') || null;
   let currentData = null;
   let currentSection = 'dashboard';
   let hasUnsaved = false;
@@ -60,12 +61,13 @@
   let confirmCallback = null;
   let dragFromIdx = null;
   let dragSectionKey = null;
+  let autoSaveTimeout = null;
 
   // === SECTION SCHEMAS ===
   const SCHEMAS = {
     news: {
       label: 'Yangiliklar / News', icon: I.news, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.category, i.date, i.author].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.category, i.date, i.author].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'icon', type: 'text', label: 'Icon (emoji)', half: true },
@@ -74,15 +76,12 @@
         { key: 'tag', type: 'text', label: 'Teg (UZ)', required: true, half: true },
         { key: 'tag_en', type: 'text', label: 'Tag (EN)', half: true },
         { key: 'tag_ar', type: 'text', label: 'Tag (AR)', dir: 'rtl', half: true },
-        { key: 'tag_tr', type: 'text', label: 'Etiket (TR)', half: true },
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
         { key: 'title_ar', type: 'text', label: 'Title (AR)', dir: 'rtl' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'summary', type: 'textarea', label: 'Qisqacha (UZ)', required: true },
         { key: 'summary_en', type: 'textarea', label: 'Summary (EN)' },
         { key: 'summary_ar', type: 'textarea', label: 'Summary (AR)', dir: 'rtl' },
-        { key: 'summary_tr', type: 'textarea', label: 'Özet (TR)' },
         { key: 'date', type: 'text', label: 'Sana', half: true, placeholder: '15 Yanvar 2025' },
         { key: 'category', type: 'select', label: 'Kategoriya', half: true,
           options: ['Tadbir', 'Nashr', 'Akademiya', 'Xalqaro', 'Tadqiqot', 'Konferensiya'] },
@@ -92,8 +91,8 @@
       ]
     },
     researchAreas: {
-      label: 'Tadqiqot yo\'nalishlari / Research', icon: I.research, idKey: 'id',
-      display: i => ({ t: i.title, m: (i.count || 0) + ' study' }),
+      label: 'Tadqiqot / Research', icon: I.research, idKey: 'id',
+      display: function(i) { return { t: i.title, m: (i.count || 0) + ' study' }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'icon', type: 'text', label: 'Icon (emoji)', half: true },
@@ -102,16 +101,14 @@
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
         { key: 'title_ar', type: 'text', label: 'Title (AR)', dir: 'rtl' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'desc', type: 'textarea', label: 'Tavsif (UZ)' },
         { key: 'desc_en', type: 'textarea', label: 'Description (EN)' },
         { key: 'desc_ar', type: 'textarea', label: 'Description (AR)', dir: 'rtl' },
-        { key: 'desc_tr', type: 'textarea', label: 'Açıklama (TR)' },
       ]
     },
     events: {
       label: 'Tadbirlar / Events', icon: I.calendar, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.day + ' ' + i.month, i.type, i.location].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.day + ' ' + i.month, i.type, i.location].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'image', type: 'image', label: 'Event banner' },
@@ -119,11 +116,9 @@
         { key: 'month', type: 'text', label: 'Oy (UZ)', half: true, placeholder: 'YAN' },
         { key: 'month_en', type: 'text', label: 'Month (EN)', half: true, placeholder: 'JAN' },
         { key: 'month_ar', type: 'text', label: 'Month (AR)', half: true, dir: 'rtl' },
-        { key: 'month_tr', type: 'text', label: 'Ay (TR)', half: true, placeholder: 'OCA' },
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
         { key: 'title_ar', type: 'text', label: 'Title (AR)', dir: 'rtl' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'type', type: 'select', label: 'Type', half: true,
           options: ['seminar', 'conference', 'workshop', 'online'] },
         { key: 'location', type: 'text', label: 'Location', half: true },
@@ -131,14 +126,13 @@
         { key: 'speaker', type: 'text', label: 'Speaker', half: true },
         { key: 'description', type: 'textarea', label: 'Tavsif (UZ)' },
         { key: 'description_en', type: 'textarea', label: 'Description (EN)' },
-        { key: 'description_tr', type: 'textarea', label: 'Açıklama (TR)' },
         { key: 'capacity', type: 'number', label: 'Capacity', half: true },
         { key: 'registered', type: 'number', label: 'Registered', half: true },
       ]
     },
     publications: {
       label: 'Nashrlar / Publications', icon: I.book, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.author, i.year, i.type].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.author, i.year, i.type].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'abbr', type: 'text', label: 'Abbreviation', half: true, placeholder: 'UMI' },
@@ -148,11 +142,9 @@
         { key: 'coverImage', type: 'image', label: 'Book cover' },
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'author', type: 'text', label: 'Author', required: true },
         { key: 'desc', type: 'textarea', label: 'Tavsif (UZ)' },
         { key: 'desc_en', type: 'textarea', label: 'Description (EN)' },
-        { key: 'desc_tr', type: 'textarea', label: 'Açıklama (TR)' },
         { key: 'color', type: 'color', label: 'Color', half: true },
         { key: 'pages', type: 'number', label: 'Pages', half: true },
         { key: 'language', type: 'text', label: 'Language', half: true, placeholder: 'O\'zbekcha' },
@@ -162,7 +154,7 @@
     },
     team: {
       label: 'Jamoa / Team', icon: I.users, idKey: 'id',
-      display: i => ({ t: i.name, m: [i.role, i.dept].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.name, m: [i.role, i.dept].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'name', type: 'text', label: 'Full name', required: true },
@@ -171,20 +163,17 @@
         { key: 'avatar', type: 'image', label: 'Profile photo' },
         { key: 'role', type: 'text', label: 'Lavozim (UZ)', required: true, half: true },
         { key: 'role_en', type: 'text', label: 'Role (EN)', half: true },
-        { key: 'role_tr', type: 'text', label: 'Role (TR)', half: true },
         { key: 'dept', type: 'text', label: 'Bo\'lim (UZ)', half: true },
         { key: 'dept_en', type: 'text', label: 'Dept (EN)', half: true },
-        { key: 'dept_tr', type: 'text', label: 'Dept (TR)', half: true },
         { key: 'bio', type: 'textarea', label: 'Tarjimai hol (UZ)' },
         { key: 'bio_en', type: 'textarea', label: 'Bio (EN)' },
-        { key: 'bio_tr', type: 'textarea', label: 'Bio (TR)' },
         { key: 'education', type: 'text', label: 'Education' },
         { key: 'specialization', type: 'tags', label: 'Specialization' },
       ]
     },
     programs: {
       label: 'Dasturlar / Programs', icon: I.academic, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.duration, i.level, i.status].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.duration, i.level, i.status].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'icon', type: 'text', label: 'Icon (emoji)', half: true },
@@ -192,7 +181,6 @@
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
         { key: 'title_ar', type: 'text', label: 'Title (AR)', dir: 'rtl' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'duration', type: 'text', label: 'Duration', half: true, placeholder: '12 hafta' },
         { key: 'level', type: 'select', label: 'Level', half: true,
           options: ['Boshlang\'ich', 'O\'rta', 'Yuqori', 'Barcha darajalar'] },
@@ -202,7 +190,7 @@
     },
     videos: {
       label: 'Videolar / Videos', icon: I.video, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.category, i.duration, i.speaker].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.category, i.duration, i.speaker].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'emoji', type: 'text', label: 'Emoji', half: true },
@@ -212,35 +200,31 @@
           options: ['Konferensiya', 'Dars', 'Panel'] },
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'views', type: 'text', label: 'Views', half: true, placeholder: '12.4K' },
         { key: 'duration', type: 'text', label: 'Duration', half: true, placeholder: '52:18' },
         { key: 'date', type: 'text', label: 'Date', half: true, placeholder: '2025-03-15' },
         { key: 'speaker', type: 'text', label: 'Speaker', half: true },
         { key: 'description', type: 'textarea', label: 'Tavsif (UZ)' },
         { key: 'description_en', type: 'textarea', label: 'Description (EN)' },
-        { key: 'description_tr', type: 'textarea', label: 'Açıklama (TR)' },
       ]
     },
     faq: {
       label: 'TSS / FAQ', icon: I.help, idKey: null,
-      display: i => ({ t: i.q, m: i.category || '' }),
+      display: function(i) { return { t: i.q, m: i.category || '' }; },
       fields: [
         { key: 'q', type: 'text', label: 'Savol (UZ)', required: true },
         { key: 'q_en', type: 'text', label: 'Question (EN)' },
         { key: 'q_ar', type: 'text', label: 'Question (AR)', dir: 'rtl' },
-        { key: 'q_tr', type: 'text', label: 'Soru (TR)' },
         { key: 'a', type: 'textarea', label: 'Javob (UZ)', required: true },
         { key: 'a_en', type: 'textarea', label: 'Answer (EN)' },
         { key: 'a_ar', type: 'textarea', label: 'Answer (AR)', dir: 'rtl' },
-        { key: 'a_tr', type: 'textarea', label: 'Cevap (TR)' },
         { key: 'category', type: 'select', label: 'Category',
           options: ['Akademiya', 'Xalqaro', 'Nashr', 'Umumiy', 'Tadbir', 'Tadqiqot'] },
       ]
     },
     blogPosts: {
       label: 'Maqolalar / Blog', icon: I.pencil, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.category, i.date, i.author].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.category, i.date, i.author].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'image', type: 'image', label: 'Article image' },
@@ -250,10 +234,8 @@
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
         { key: 'title_ar', type: 'text', label: 'Title (AR)', dir: 'rtl' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'excerpt', type: 'textarea', label: 'Parcha (UZ)', required: true },
         { key: 'excerpt_en', type: 'textarea', label: 'Excerpt (EN)' },
-        { key: 'excerpt_tr', type: 'textarea', label: 'Excerpt (TR)' },
         { key: 'author', type: 'text', label: 'Author', half: true },
         { key: 'date', type: 'text', label: 'Date', half: true, placeholder: '2025-03-10' },
         { key: 'readTime', type: 'text', label: 'Read time', half: true, placeholder: '8 daq' },
@@ -262,7 +244,7 @@
     },
     testimonials: {
       label: 'Fikrlar / Testimonials', icon: I.chat, idKey: 'id',
-      display: i => ({ t: i.name, m: [i.institution, i.country].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.name, m: [i.institution, i.country].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'emoji', type: 'text', label: 'Flag emoji', half: true },
@@ -272,12 +254,11 @@
         { key: 'country', type: 'text', label: 'Country', half: true },
         { key: 'quote', type: 'textarea', label: 'Iqtibos (UZ)', required: true },
         { key: 'quote_en', type: 'textarea', label: 'Quote (EN)' },
-        { key: 'quote_tr', type: 'textarea', label: 'Alıntı (TR)' },
       ]
     },
     gallery: {
       label: 'Galereya / Gallery', icon: I.image, idKey: 'id',
-      display: i => ({ t: i.title, m: [i.category, i.date, (i.count||0) + ' photos'].filter(Boolean).join(' \u00b7 ') }),
+      display: function(i) { return { t: i.title, m: [i.category, i.date, (i.count||0) + ' photos'].filter(Boolean).join(' \u00b7 ') }; },
       fields: [
         { key: 'id', type: 'number', label: 'ID', auto: true, half: true },
         { key: 'icon', type: 'text', label: 'Icon (emoji)', half: true },
@@ -285,7 +266,6 @@
         { key: 'count', type: 'number', label: 'Photo count', half: true },
         { key: 'title', type: 'text', label: 'Sarlavha (UZ)', required: true },
         { key: 'title_en', type: 'text', label: 'Title (EN)' },
-        { key: 'title_tr', type: 'text', label: 'Başlık (TR)' },
         { key: 'category', type: 'text', label: 'Category', half: true, placeholder: 'Simpozium' },
         { key: 'date', type: 'text', label: 'Date', half: true, placeholder: '2025-03-15' },
         { key: 'color', type: 'color', label: 'Color', half: true },
@@ -293,66 +273,226 @@
     },
   };
 
-  const SECTION_ORDER = ['news','researchAreas','events','publications','team','programs','videos','faq','blogPosts','testimonials','gallery'];
+  var SECTION_ORDER = ['news','researchAreas','events','publications','team','programs','videos','faq','blogPosts','testimonials','gallery'];
 
   // ───────────────────────────────────────────
   // INITIALIZATION
   // ───────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function() {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
     if (authToken) verifyAndLoad();
+    initEventDelegation();
   });
+
+  // ───────────────────────────────────────────
+  // EVENT DELEGATION (replaces inline onclick)
+  // ───────────────────────────────────────────
+  function initEventDelegation() {
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('[data-action]');
+      if (!el) return;
+
+      var action = el.dataset.action;
+      e.preventDefault();
+
+      switch (action) {
+        case 'admin-nav': nav(el.dataset.section); break;
+        case 'admin-add': handleAdd(el.dataset.key); break;
+        case 'admin-edit': handleEdit(el.dataset.key, +el.dataset.idx); break;
+        case 'admin-dup': handleDup(el.dataset.key, +el.dataset.idx); break;
+        case 'admin-del': handleDel(el.dataset.key, +el.dataset.idx); break;
+        case 'admin-save': saveAll(); break;
+        case 'admin-preview': window.open('/', '_blank'); break;
+        case 'admin-theme': toggleAdminTheme(); break;
+        case 'admin-logout': handleLogout(); break;
+        case 'admin-backup': manualBackup(); break;
+        case 'admin-pwd': changePwd(); break;
+        case 'admin-i18n-add': handleI18nAdd(); break;
+        case 'admin-form-save': handleFormSave(el.dataset.key, +el.dataset.isnew, +el.dataset.idx); break;
+        case 'admin-modal-close': closeAdminModal(el.dataset.modal); break;
+        case 'admin-confirm': handleConfirmAction(); break;
+        case 'admin-img-clear': handleImgClear(el.dataset.key); break;
+        case 'admin-toggle': handleToggleClick(el); break;
+      }
+    });
+
+    // Handle login form
+    var loginForm = document.querySelector('#login-screen form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleLogin();
+      });
+    }
+
+    // Handle i18n input changes
+    document.addEventListener('change', function(e) {
+      if (e.target.dataset && e.target.dataset.lang && e.target.dataset.key) {
+        handleI18nSet(e.target);
+      }
+    });
+
+    // Handle tag input
+    document.addEventListener('keydown', function(e) {
+      if (e.target.classList.contains('admin-tags-input') && e.key === 'Enter' && e.target.value.trim()) {
+        e.preventDefault();
+        handleTagAdd(e.target);
+      }
+    });
+
+    // Handle tag remove
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('tag-remove') || e.target.closest('.tag-remove')) {
+        var pill = (e.target.closest('.admin-tag-pill'));
+        if (pill) pill.remove();
+      }
+    });
+
+    // Image upload via file input change
+    document.addEventListener('change', function(e) {
+      if (e.target.type === 'file' && e.target.closest('.admin-img-upload-btn')) {
+        var fieldKey = e.target.closest('.admin-img-field').dataset.key;
+        handleImgUpload(e.target, fieldKey);
+      }
+    });
+
+    // Color input sync
+    document.addEventListener('input', function(e) {
+      if (e.target.type === 'color') {
+        var textInput = e.target.nextElementSibling;
+        if (textInput) textInput.value = e.target.value;
+      }
+    });
+    document.addEventListener('change', function(e) {
+      if (e.target.type === 'text' && e.target.closest('.admin-color-group')) {
+        var colorInput = e.target.previousElementSibling;
+        if (colorInput && colorInput.type === 'color') colorInput.value = e.target.value;
+      }
+    });
+
+    // Search debounce
+    document.addEventListener('input', function(e) {
+      if (e.target.id === 'section-search') {
+        handleAdminSearch(e.target.value);
+      }
+    });
+
+    // Drag & drop
+    document.addEventListener('dragstart', function(e) {
+      var card = e.target.closest('.admin-item-card');
+      if (!card) return;
+      dragFromIdx = +card.dataset.idx;
+      dragSectionKey = card.dataset.sectionkey;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    document.addEventListener('dragover', function(e) {
+      var card = e.target.closest('.admin-item-card');
+      if (card) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+        card.classList.add('drag-over');
+      }
+    });
+    document.addEventListener('drop', function(e) {
+      var card = e.target.closest('.admin-item-card');
+      if (!card) return;
+      e.preventDefault();
+      document.querySelectorAll('.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+      var toIdx = +card.dataset.idx;
+      var key = card.dataset.sectionkey;
+      if (dragSectionKey !== key || dragFromIdx === null || dragFromIdx === toIdx) return;
+      var arr = currentData[key];
+      var moved = arr.splice(dragFromIdx, 1)[0];
+      arr.splice(toIdx, 0, moved);
+      dragFromIdx = null;
+      dragSectionKey = null;
+      markUnsaved();
+      renderSection(document.getElementById('admin-content'), key);
+      toast('Order updated', 'info');
+    });
+    document.addEventListener('dragend', function(e) {
+      var card = e.target.closest('.admin-item-card');
+      if (card) card.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(function(c) { c.classList.remove('drag-over'); });
+      dragFromIdx = null;
+    });
+  }
+
+  // ───────────────────────────────────────────
+  // API LAYER (with CSRF)
+  // ───────────────────────────────────────────
+  function authHeaders() {
+    var headers = {
+      'Authorization': 'Bearer ' + authToken,
+      'Content-Type': 'application/json'
+    };
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+    return headers;
+  }
+
+  async function api(method, path, body) {
+    var headers = path === '/api/login'
+      ? { 'Content-Type': 'application/json' }
+      : authHeaders();
+    var opts = { method: method, headers: headers };
+    if (body) opts.body = JSON.stringify(body);
+    try {
+      var res = await fetch(path, opts);
+      return await res.json();
+    } catch (e) {
+      return { success: false, error: 'Connection error' };
+    }
+  }
 
   async function verifyAndLoad() {
     try {
-      const res = await fetch('/api/data', { headers: authHeaders() });
+      var res = await fetch('/api/data', { headers: authHeaders() });
       if (res.ok) {
         currentData = await res.json();
         showApp();
       } else {
-        sessionStorage.removeItem('ibxi_admin_token');
-        authToken = null;
+        clearAuth();
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error('Verify failed:', e);
+    }
   }
 
-  // ───────────────────────────────────────────
-  // API LAYER
-  // ───────────────────────────────────────────
-  function authHeaders() {
-    return { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' };
-  }
-
-  async function api(method, path, body) {
-    const opts = { method, headers: path === '/api/login' ? { 'Content-Type': 'application/json' } : authHeaders() };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(path, opts);
-    return res.json();
+  function clearAuth() {
+    sessionStorage.removeItem('ibxi_admin_token');
+    sessionStorage.removeItem('ibxi_csrf_token');
+    authToken = null;
+    csrfToken = null;
   }
 
   // ───────────────────────────────────────────
   // AUTH
   // ───────────────────────────────────────────
-  window.handleLogin = async function (e) {
-    e.preventDefault();
-    const pwd = document.getElementById('login-password').value;
-    const btn = document.getElementById('login-btn');
-    const err = document.getElementById('login-error');
-    if (!pwd) { err.textContent = 'Enter password'; return; }
-    btn.disabled = true; btn.textContent = 'Logging in...';
+  async function handleLogin() {
+    var pwd = document.getElementById('login-password').value;
+    var btn = document.getElementById('login-btn');
+    var err = document.getElementById('login-error');
+    if (!pwd) { err.textContent = 'Parolni kiriting'; return; }
+    btn.disabled = true; btn.textContent = 'Kirilmoqda...';
     try {
-      const r = await api('POST', '/api/login', { password: pwd });
+      var r = await api('POST', '/api/login', { password: pwd });
       if (r.success) {
         authToken = r.token;
+        csrfToken = r.csrf || null;
         sessionStorage.setItem('ibxi_admin_token', authToken);
+        if (csrfToken) sessionStorage.setItem('ibxi_csrf_token', csrfToken);
         currentData = await api('GET', '/api/data');
         showApp();
       } else {
-        err.textContent = r.error || 'Invalid password';
+        err.textContent = r.error || 'Noto\'g\'ri parol';
       }
-    } catch (ex) { err.textContent = 'Connection error'; }
+    } catch (ex) { err.textContent = 'Ulanish xatosi'; }
     btn.disabled = false; btn.textContent = 'Login';
-  };
+  }
 
   function showApp() {
     document.getElementById('login-screen').style.display = 'none';
@@ -369,172 +509,202 @@
     currentSection = section;
     renderSidebar();
     renderTopbar();
-    const el = document.getElementById('admin-content');
+    var el = document.getElementById('admin-content');
     if (section === 'dashboard') renderDashboard(el);
     else if (section === 'i18n') renderI18n(el);
     else if (section === 'settings') renderSettings(el);
+    else if (section === 'activity') renderActivity(el);
     else renderSection(el, section);
     el.scrollTop = 0;
   }
-  window.adminNav = function (s) { nav(s); };
 
   // ───────────────────────────────────────────
   // SIDEBAR
   // ───────────────────────────────────────────
   function renderSidebar() {
-    const sb = document.getElementById('admin-sidebar');
-    const contentItems = SECTION_ORDER.map(key => {
-      const s = SCHEMAS[key];
-      const arr = currentData[key];
-      const count = Array.isArray(arr) ? arr.length : 0;
-      return `<div class="admin-nav-item ${currentSection===key?'active':''}" onclick="adminNav('${key}')">
-        <span class="nav-icon">${s.icon}</span>
-        <span>${s.label.split('/')[0].trim()}</span>
-        <span class="nav-count">${count}</span>
-      </div>`;
+    var sb = document.getElementById('admin-sidebar');
+    var contentItems = SECTION_ORDER.map(function(key) {
+      var s = SCHEMAS[key];
+      var arr = currentData[key];
+      var count = Array.isArray(arr) ? arr.length : 0;
+      return '<div class="admin-nav-item ' + (currentSection===key?'active':'') + '" data-action="admin-nav" data-section="' + key + '">' +
+        '<span class="nav-icon">' + s.icon + '</span>' +
+        '<span>' + esc(s.label.split('/')[0].trim()) + '</span>' +
+        '<span class="nav-count">' + count + '</span>' +
+      '</div>';
     }).join('');
 
-    sb.innerHTML = `
-      <div class="admin-sidebar-logo">
-        <img src="assets/img/logo-gold.png" alt="Logo" style="width:28px;height:28px;object-fit:contain" />
-        <span>Admin Panel</span>
-      </div>
-      <nav class="admin-nav">
-        <div class="admin-nav-label">Overview</div>
-        <div class="admin-nav-item ${currentSection==='dashboard'?'active':''}" onclick="adminNav('dashboard')">
-          <span class="nav-icon">${I.dashboard}</span><span>Dashboard</span>
-        </div>
-        <div class="admin-nav-item ${currentSection==='i18n'?'active':''}" onclick="adminNav('i18n')">
-          <span class="nav-icon">${I.globe}</span><span>Translations</span>
-          <span class="nav-count">${Object.keys(currentData.i18n.uz||{}).length}</span>
-        </div>
-        <div class="admin-nav-label">Content</div>
-        ${contentItems}
-        <div class="admin-nav-label">System</div>
-        <div class="admin-nav-item ${currentSection==='settings'?'active':''}" onclick="adminNav('settings')">
-          <span class="nav-icon">${I.settings}</span><span>Settings</span>
-        </div>
-      </nav>
-      <div class="admin-sidebar-footer">
-        <div class="admin-nav-item" onclick="doLogout()">
-          <span class="nav-icon">${I.logout}</span><span>Logout</span>
-        </div>
-      </div>`;
+    sb.innerHTML =
+      '<div class="admin-sidebar-logo">' +
+        '<img src="assets/img/logo-gold.png" alt="Logo" style="width:28px;height:28px;object-fit:contain" />' +
+        '<span>Admin Panel</span>' +
+      '</div>' +
+      '<nav class="admin-nav">' +
+        '<div class="admin-nav-label">Overview</div>' +
+        '<div class="admin-nav-item ' + (currentSection==='dashboard'?'active':'') + '" data-action="admin-nav" data-section="dashboard">' +
+          '<span class="nav-icon">' + I.dashboard + '</span><span>Dashboard</span>' +
+        '</div>' +
+        '<div class="admin-nav-item ' + (currentSection==='i18n'?'active':'') + '" data-action="admin-nav" data-section="i18n">' +
+          '<span class="nav-icon">' + I.globe + '</span><span>Translations</span>' +
+          '<span class="nav-count">' + Object.keys((currentData.i18n && currentData.i18n.uz) || {}).length + '</span>' +
+        '</div>' +
+        '<div class="admin-nav-item ' + (currentSection==='activity'?'active':'') + '" data-action="admin-nav" data-section="activity">' +
+          '<span class="nav-icon">' + I.activity + '</span><span>Activity Log</span>' +
+        '</div>' +
+        '<div class="admin-nav-label">Content</div>' +
+        contentItems +
+        '<div class="admin-nav-label">System</div>' +
+        '<div class="admin-nav-item ' + (currentSection==='settings'?'active':'') + '" data-action="admin-nav" data-section="settings">' +
+          '<span class="nav-icon">' + I.settings + '</span><span>Settings</span>' +
+        '</div>' +
+      '</nav>' +
+      '<div class="admin-sidebar-footer">' +
+        '<div class="admin-nav-item" data-action="admin-logout">' +
+          '<span class="nav-icon">' + I.logout + '</span><span>Logout</span>' +
+        '</div>' +
+      '</div>';
   }
 
   // ───────────────────────────────────────────
   // TOPBAR
   // ───────────────────────────────────────────
   function renderTopbar() {
-    const tb = document.getElementById('admin-topbar');
-    const labels = { dashboard:'Dashboard', i18n:'Translations', settings:'Settings' };
-    const label = labels[currentSection] || (SCHEMAS[currentSection]?.label || currentSection);
-    tb.innerHTML = `
-      <div class="admin-topbar-left">
-        <span class="admin-breadcrumb">${label}</span>
-      </div>
-      <div class="admin-topbar-right">
-        <button class="admin-topbar-btn" onclick="window.open('/','_blank')" title="Preview site">
-          ${I.preview} Preview
-        </button>
-        <button class="admin-topbar-btn" onclick="toggleTheme()">
-          ${darkMode ? I.sun : I.moon}
-        </button>
-        <button class="admin-topbar-btn admin-save-btn${hasUnsaved?' has-unsaved':''}" onclick="saveAll()" id="save-btn">
-          ${I.save} Save${hasUnsaved?' *':''}
-        </button>
-      </div>`;
+    var tb = document.getElementById('admin-topbar');
+    var labels = { dashboard:'Dashboard', i18n:'Translations', settings:'Settings', activity:'Activity Log' };
+    var label = labels[currentSection] || (SCHEMAS[currentSection] ? SCHEMAS[currentSection].label : currentSection);
+    tb.innerHTML =
+      '<div class="admin-topbar-left">' +
+        '<span class="admin-breadcrumb">' + esc(label) + '</span>' +
+      '</div>' +
+      '<div class="admin-topbar-right">' +
+        '<button class="admin-topbar-btn" data-action="admin-preview" title="Preview site">' +
+          I.preview + ' Preview' +
+        '</button>' +
+        '<button class="admin-topbar-btn" data-action="admin-theme">' +
+          (darkMode ? I.sun : I.moon) +
+        '</button>' +
+        '<button class="admin-topbar-btn admin-save-btn' + (hasUnsaved?' has-unsaved':'') + '" data-action="admin-save" id="save-btn">' +
+          I.save + ' Save' + (hasUnsaved?' *':'') +
+        '</button>' +
+      '</div>';
   }
 
   // ───────────────────────────────────────────
   // DASHBOARD
   // ───────────────────────────────────────────
   function renderDashboard(el) {
-    const stats = SECTION_ORDER.map(key => {
-      const s = SCHEMAS[key]; const c = (currentData[key]||[]).length;
-      return `<div class="admin-stat-card" onclick="adminNav('${key}')">
-        <div class="admin-stat-count">${c}</div>
-        <div class="admin-stat-label">${s.label.split('/')[0].trim()}</div>
-      </div>`;
+    var stats = SECTION_ORDER.map(function(key) {
+      var s = SCHEMAS[key]; var c = (currentData[key]||[]).length;
+      return '<div class="admin-stat-card" data-action="admin-nav" data-section="' + key + '">' +
+        '<div class="admin-stat-count">' + c + '</div>' +
+        '<div class="admin-stat-label">' + esc(s.label.split('/')[0].trim()) + '</div>' +
+      '</div>';
     }).join('');
-    const i18nC = Object.keys(currentData.i18n.uz||{}).length;
-    el.innerHTML = `
-      <div class="admin-dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Manage all content for the IBXI application</p>
-      </div>
-      <div class="admin-stat-grid">
-        <div class="admin-stat-card" onclick="adminNav('i18n')">
-          <div class="admin-stat-count">${i18nC}</div>
-          <div class="admin-stat-label">Translation keys</div>
-        </div>
-        ${stats}
-      </div>`;
+    var i18nC = Object.keys((currentData.i18n && currentData.i18n.uz) || {}).length;
+    el.innerHTML =
+      '<div class="admin-dashboard-header">' +
+        '<h1>Dashboard</h1>' +
+        '<p>IBXI ilova kontentini boshqaring</p>' +
+      '</div>' +
+      '<div class="admin-stat-grid">' +
+        '<div class="admin-stat-card" data-action="admin-nav" data-section="i18n">' +
+          '<div class="admin-stat-count">' + i18nC + '</div>' +
+          '<div class="admin-stat-label">Tarjima kalitlari</div>' +
+        '</div>' +
+        stats +
+      '</div>';
+  }
+
+  // ───────────────────────────────────────────
+  // ACTIVITY LOG (NEW)
+  // ───────────────────────────────────────────
+  async function renderActivity(el) {
+    el.innerHTML = '<div class="admin-dashboard-header"><h1>Activity Log</h1><p>Oxirgi amallar tarixi</p></div><div style="text-align:center;padding:24px;color:var(--text-3)">Yuklanmoqda...</div>';
+    try {
+      var r = await api('GET', '/api/audit');
+      if (r && r.items) {
+        var rows = r.items.map(function(a) {
+          return '<tr>' +
+            '<td style="white-space:nowrap">' + esc(a.timestamp || '') + '</td>' +
+            '<td><span class="admin-tag-pill">' + esc(a.action || '') + '</span></td>' +
+            '<td>' + esc(a.section || '-') + '</td>' +
+            '<td>' + esc(a.details || '-') + '</td>' +
+            '<td>' + esc(a.ip_address || '-') + '</td>' +
+          '</tr>';
+        }).join('');
+        el.innerHTML =
+          '<div class="admin-dashboard-header"><h1>Activity Log</h1><p>Oxirgi 100 ta amal</p></div>' +
+          '<div style="overflow-x:auto"><table class="admin-i18n-table">' +
+            '<thead><tr><th>Vaqt</th><th>Amal</th><th>Bo\'lim</th><th>Tafsilot</th><th>IP</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table></div>';
+      }
+    } catch (e) {
+      el.innerHTML = '<div class="admin-dashboard-header"><h1>Activity Log</h1></div><p style="color:var(--text-3)">Yuklab bo\'lmadi</p>';
+    }
   }
 
   // ───────────────────────────────────────────
   // SECTION LIST VIEW
   // ───────────────────────────────────────────
   function renderSection(el, key) {
-    const schema = SCHEMAS[key];
-    const items = currentData[key] || [];
+    var schema = SCHEMAS[key];
+    var items = currentData[key] || [];
 
-    const cards = items.map((item, idx) => {
-      const d = schema.display(item);
-      return `<div class="admin-item-card" data-idx="${idx}"
-          data-search="${esc(d.t+' '+d.m).toLowerCase()}"
-          draggable="true"
-          ondragstart="dStart(event,${idx},'${key}')" ondragover="dOver(event)"
-          ondrop="dDrop(event,${idx},'${key}')" ondragend="dEnd(event)">
-        <div class="admin-drag-handle" title="Drag to reorder">${I.grip}</div>
-        <div class="admin-item-info">
-          <div class="admin-item-title">${esc(d.t)}</div>
-          <div class="admin-item-meta">${esc(d.m)}</div>
-        </div>
-        <div class="admin-item-actions">
-          <button class="admin-action-btn" onclick="aDup('${key}',${idx})" title="Duplicate">${I.duplicate}</button>
-          <button class="admin-action-btn" onclick="aEdit('${key}',${idx})" title="Edit">${I.edit}</button>
-          <button class="admin-action-btn danger" onclick="aDel('${key}',${idx})" title="Delete">${I.trash}</button>
-        </div>
-      </div>`;
+    var cards = items.map(function(item, idx) {
+      var d = schema.display(item);
+      return '<div class="admin-item-card" data-idx="' + idx + '" data-sectionkey="' + key + '"' +
+          ' data-search="' + esc(d.t+' '+d.m).toLowerCase() + '"' +
+          ' draggable="true">' +
+        '<div class="admin-drag-handle" title="Tartibni o\'zgartirish">' + I.grip + '</div>' +
+        '<div class="admin-item-info">' +
+          '<div class="admin-item-title">' + esc(d.t) + '</div>' +
+          '<div class="admin-item-meta">' + esc(d.m) + '</div>' +
+        '</div>' +
+        '<div class="admin-item-actions">' +
+          '<button class="admin-action-btn" data-action="admin-dup" data-key="' + key + '" data-idx="' + idx + '" title="Duplicate">' + I.duplicate + '</button>' +
+          '<button class="admin-action-btn" data-action="admin-edit" data-key="' + key + '" data-idx="' + idx + '" title="Edit">' + I.edit + '</button>' +
+          '<button class="admin-action-btn danger" data-action="admin-del" data-key="' + key + '" data-idx="' + idx + '" title="Delete">' + I.trash + '</button>' +
+        '</div>' +
+      '</div>';
     }).join('');
 
-    const emptyHtml = '<div class="admin-empty"><div class="admin-empty-icon">' + I.empty + '</div><div class="admin-empty-text">No records yet</div></div>';
+    var emptyHtml = '<div class="admin-empty"><div class="admin-empty-icon">' + I.empty + '</div><div class="admin-empty-text">Hali yozuvlar yo\'q</div></div>';
 
-    el.innerHTML = `
-      <div class="admin-section-header">
-        <div class="admin-section-title">
-          ${schema.label}
-          <span class="admin-section-count">${items.length}</span>
-        </div>
-        <button class="admin-add-btn" onclick="aAdd('${key}')">${I.plus} Add new</button>
-      </div>
-      <div class="admin-search-bar">
-        <span class="search-icon">${I.search}</span>
-        <input type="text" placeholder="Search..." oninput="aSearch(this.value)" id="section-search" />
-      </div>
-      <div class="admin-item-list" id="item-list">
-        ${cards || emptyHtml}
-      </div>`;
+    el.innerHTML =
+      '<div class="admin-section-header">' +
+        '<div class="admin-section-title">' +
+          esc(schema.label) +
+          ' <span class="admin-section-count">' + items.length + '</span>' +
+        '</div>' +
+        '<button class="admin-add-btn" data-action="admin-add" data-key="' + key + '">' + I.plus + ' Yangi qo\'shish</button>' +
+      '</div>' +
+      '<div class="admin-search-bar">' +
+        '<span class="search-icon">' + I.search + '</span>' +
+        '<input type="text" placeholder="Qidirish..." id="section-search" />' +
+      '</div>' +
+      '<div class="admin-item-list" id="item-list">' +
+        (cards || emptyHtml) +
+      '</div>';
   }
 
   // ───────────────────────────────────────────
   // SEARCH
   // ───────────────────────────────────────────
-  window.aSearch = function (q) {
+  function handleAdminSearch(q) {
     q = q.toLowerCase();
-    document.querySelectorAll('#item-list .admin-item-card').forEach(c => {
+    document.querySelectorAll('#item-list .admin-item-card').forEach(function(c) {
       c.style.display = (c.dataset.search || '').includes(q) ? '' : 'none';
     });
-  };
+  }
 
   // ───────────────────────────────────────────
   // ADD / EDIT / DUPLICATE / DELETE
   // ───────────────────────────────────────────
-  window.aAdd = function (key) {
-    const schema = SCHEMAS[key];
-    const item = {};
-    schema.fields.forEach(f => {
+  function handleAdd(key) {
+    var schema = SCHEMAS[key];
+    var item = {};
+    schema.fields.forEach(function(f) {
       if (f.auto && f.key === 'id') item.id = nextId(key);
       else if (f.type === 'number') item[f.key] = 0;
       else if (f.type === 'checkbox') item[f.key] = false;
@@ -542,95 +712,95 @@
       else item[f.key] = '';
     });
     openForm(key, item, true, -1);
-  };
+  }
 
-  window.aEdit = function (key, idx) {
-    const item = currentData[key][idx];
+  function handleEdit(key, idx) {
+    var item = currentData[key][idx];
     if (!item) return;
     openForm(key, JSON.parse(JSON.stringify(item)), false, idx);
-  };
+  }
 
-  window.aDup = function (key, idx) {
-    const schema = SCHEMAS[key];
-    const original = currentData[key][idx];
+  function handleDup(key, idx) {
+    var schema = SCHEMAS[key];
+    var original = currentData[key][idx];
     if (!original) return;
-    const clone = JSON.parse(JSON.stringify(original));
+    var clone = JSON.parse(JSON.stringify(original));
     if (schema.idKey) clone[schema.idKey] = nextId(key);
-    const tf = schema.fields.find(f => f.key === 'title' || f.key === 'name' || f.key === 'q');
-    if (tf && clone[tf.key]) clone[tf.key] += ' (copy)';
+    var tf = schema.fields.find(function(f) { return f.key === 'title' || f.key === 'name' || f.key === 'q'; });
+    if (tf && clone[tf.key]) clone[tf.key] += ' (nusxa)';
     openForm(key, clone, true, -1);
-    toast('Record duplicated', 'info');
-  };
+    toast('Yozuv nusxalandi', 'info');
+  }
 
-  window.aDel = function (key, idx) {
-    const item = currentData[key][idx];
-    const title = item?.title || item?.name || item?.q || '#' + (idx+1);
-    showConfirm('Delete this record?', '"' + title + '" will be permanently removed.', () => {
+  function handleDel(key, idx) {
+    var item = currentData[key][idx];
+    var title = item ? (item.title || item.name || item.q || '#' + (idx+1)) : '#' + (idx+1);
+    showConfirm('O\'chirilsinmi?', '"' + esc(title) + '" butunlay o\'chiriladi.', function() {
       currentData[key].splice(idx, 1);
       markUnsaved();
       renderSection(document.getElementById('admin-content'), key);
       renderSidebar();
-      toast('Record deleted', 'info');
+      toast('Yozuv o\'chirildi', 'info');
     });
-  };
+  }
 
   // ───────────────────────────────────────────
   // FORM (MODAL)
   // ───────────────────────────────────────────
   function openForm(sectionKey, item, isNew, idx) {
-    const schema = SCHEMAS[sectionKey];
-    const fieldsHtml = schema.fields.map(f => {
-      const val = item[f.key] ?? '';
-      const cls = f.half ? 'admin-form-group' : 'admin-form-group full-width';
-      const req = f.required ? '<span class="req">*</span>' : '';
-      const ro = f.auto ? 'readonly' : '';
-      const ph = f.placeholder ? 'placeholder="' + f.placeholder + '"' : '';
-      const dir = f.dir ? 'dir="' + f.dir + '"' : '';
+    var schema = SCHEMAS[sectionKey];
+    var fieldsHtml = schema.fields.map(function(f) {
+      var val = item[f.key] != null ? item[f.key] : '';
+      var cls = f.half ? 'admin-form-group' : 'admin-form-group full-width';
+      var req = f.required ? '<span class="req">*</span>' : '';
+      var ro = f.auto ? 'readonly' : '';
+      var ph = f.placeholder ? 'placeholder="' + esc(f.placeholder) + '"' : '';
+      var dir = f.dir ? 'dir="' + f.dir + '"' : '';
 
       if (f.type === 'textarea') {
         return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + req + '</label>' +
           '<textarea class="admin-form-input" data-key="' + f.key + '" ' + dir + ' ' + ro + '>' + esc(String(val)) + '</textarea></div>';
       }
       if (f.type === 'select') {
-        const opts = (f.options||[]).map(o => '<option value="' + o + '" ' + (val===o?'selected':'') + '>' + o + '</option>').join('');
+        var opts = (f.options||[]).map(function(o) { return '<option value="' + esc(o) + '" ' + (val===o?'selected':'') + '>' + esc(o) + '</option>'; }).join('');
         return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + req + '</label>' +
-          '<select class="admin-form-input" data-key="' + f.key + '"><option value="">-- Select --</option>' + opts + '</select></div>';
+          '<select class="admin-form-input" data-key="' + f.key + '"><option value="">-- Tanlang --</option>' + opts + '</select></div>';
       }
       if (f.type === 'checkbox') {
         return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + '</label>' +
-          '<div class="admin-toggle" onclick="togClick(this)">' +
+          '<div data-action="admin-toggle">' +
             '<div class="admin-toggle-track ' + (val?'on':'') + '" data-key="' + f.key + '"><div class="admin-toggle-thumb"></div></div>' +
-            '<span class="admin-toggle-label">' + (val ? 'Yes' : 'No') + '</span>' +
+            '<span class="admin-toggle-label">' + (val ? 'Ha' : 'Yo\'q') + '</span>' +
           '</div></div>';
       }
       if (f.type === 'color') {
         return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + '</label>' +
           '<div class="admin-color-group">' +
-            '<input type="color" value="' + (val||'#0e3526') + '" onchange="this.nextElementSibling.value=this.value" />' +
-            '<input type="text" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" onchange="this.previousElementSibling.value=this.value" />' +
+            '<input type="color" value="' + (val||'#0e3526') + '" />' +
+            '<input type="text" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" />' +
           '</div></div>';
       }
       if (f.type === 'tags') {
-        const tags = Array.isArray(val) ? val : [];
-        const pills = tags.map(t => '<span class="admin-tag-pill">' + esc(t) + '<span class="tag-remove" onclick="rmTag(this)">\u00d7</span></span>').join('');
+        var tags = Array.isArray(val) ? val : [];
+        var pills = tags.map(function(t) { return '<span class="admin-tag-pill">' + esc(t) + '<span class="tag-remove">\u00d7</span></span>'; }).join('');
         return '<div class="admin-form-group full-width"><label class="admin-form-label">' + f.label + '</label>' +
-          '<div class="admin-tags-wrap" data-key="' + f.key + '" onclick="this.querySelector(\'input\').focus()">' +
-            pills + '<input class="admin-tags-input" placeholder="Type and press Enter..." onkeydown="tagKey(event,this)" />' +
+          '<div class="admin-tags-wrap" data-key="' + f.key + '">' +
+            pills + '<input class="admin-tags-input" placeholder="Yozing va Enter bosing..." />' +
           '</div></div>';
       }
       if (f.type === 'image') {
-        const preview = val
+        var preview = val
           ? '<img src="' + esc(String(val)) + '" class="admin-img-preview" />'
-          : '<div class="admin-img-placeholder">' + I.image + '<span>No image</span></div>';
+          : '<div class="admin-img-placeholder">' + I.image + '<span>Rasm yo\'q</span></div>';
         return '<div class="admin-form-group full-width"><label class="admin-form-label">' + f.label + '</label>' +
           '<div class="admin-img-field" data-key="' + f.key + '">' +
             '<div class="admin-img-preview-wrap">' + preview + '</div>' +
             '<div class="admin-img-actions">' +
               '<label class="admin-btn admin-btn-ghost admin-img-upload-btn">' +
-                I.backup + ' Choose file' +
-                '<input type="file" accept="image/*" onchange="imgUpload(this,\'' + f.key + '\')" />' +
+                I.backup + ' Fayl tanlash' +
+                '<input type="file" accept="image/*" style="display:none" />' +
               '</label>' +
-              (val ? '<button type="button" class="admin-btn admin-btn-ghost" onclick="imgClear(\'' + f.key + '\')">Clear</button>' : '') +
+              (val ? '<button type="button" class="admin-btn admin-btn-ghost" data-action="admin-img-clear" data-key="' + f.key + '">Tozalash</button>' : '') +
             '</div>' +
             '<input type="hidden" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" />' +
           '</div></div>';
@@ -639,113 +809,108 @@
         '<input type="' + (f.type==='number'?'number':'text') + '" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" ' + dir + ' ' + ro + ' ' + ph + ' /></div>';
     }).join('');
 
-    const mc = document.getElementById('admin-modal-content');
+    var mc = document.getElementById('admin-modal-content');
     mc.innerHTML = '<div class="admin-form">' +
-      '<h2>' + (isNew ? 'Add new' : 'Edit') + ' \u2014 ' + schema.label.split('/')[0].trim() + '</h2>' +
+      '<h2>' + (isNew ? 'Yangi qo\'shish' : 'Tahrirlash') + ' \u2014 ' + esc(schema.label.split('/')[0].trim()) + '</h2>' +
       '<div class="admin-form-grid">' + fieldsHtml + '</div>' +
       '<div class="admin-form-actions">' +
-        '<button class="admin-btn admin-btn-ghost" onclick="closeModal(\'admin-modal\')">Cancel</button>' +
-        '<button class="admin-btn admin-btn-primary" onclick="formSave(\'' + sectionKey + '\',' + (isNew?1:0) + ',' + idx + ')">' +
-          (isNew ? 'Add' : 'Save') +
+        '<button class="admin-btn admin-btn-ghost" data-action="admin-modal-close" data-modal="admin-modal">Bekor qilish</button>' +
+        '<button class="admin-btn admin-btn-primary" data-action="admin-form-save" data-key="' + sectionKey + '" data-isnew="' + (isNew?1:0) + '" data-idx="' + idx + '">' +
+          (isNew ? 'Qo\'shish' : 'Saqlash') +
         '</button>' +
       '</div></div>';
-    openModal('admin-modal');
+    openAdminModal('admin-modal');
   }
 
-  // Toggle click handler
-  window.togClick = function (el) {
-    const track = el.querySelector('.admin-toggle-track');
+  function handleToggleClick(el) {
+    var track = el.querySelector('.admin-toggle-track') || el.closest('[data-action]').querySelector('.admin-toggle-track');
+    if (!track) return;
     track.classList.toggle('on');
-    el.querySelector('.admin-toggle-label').textContent = track.classList.contains('on') ? 'Yes' : 'No';
-  };
+    var label = track.parentElement.querySelector('.admin-toggle-label');
+    if (label) label.textContent = track.classList.contains('on') ? 'Ha' : 'Yo\'q';
+  }
 
-  // Tag helpers
-  window.tagKey = function (e, input) {
-    if (e.key === 'Enter' && input.value.trim()) {
-      e.preventDefault();
-      const wrap = input.closest('.admin-tags-wrap');
-      const pill = document.createElement('span');
-      pill.className = 'admin-tag-pill';
-      pill.innerHTML = esc(input.value.trim()) + '<span class="tag-remove" onclick="rmTag(this)">\u00d7</span>';
-      wrap.insertBefore(pill, input);
-      input.value = '';
-    }
-  };
-  window.rmTag = function (el) { el.closest('.admin-tag-pill').remove(); };
+  function handleTagAdd(input) {
+    var wrap = input.closest('.admin-tags-wrap');
+    var pill = document.createElement('span');
+    pill.className = 'admin-tag-pill';
+    pill.innerHTML = esc(input.value.trim()) + '<span class="tag-remove">\u00d7</span>';
+    wrap.insertBefore(pill, input);
+    input.value = '';
+  }
 
   // Image upload handler
-  window.imgUpload = async function (input, key) {
-    const file = input.files[0];
+  async function handleImgUpload(input, key) {
+    var file = input.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast('File too large (max 5MB)', 'error'); return; }
-    if (!file.type.startsWith('image/')) { toast('Only image files allowed', 'error'); return; }
-    const wrap = input.closest('.admin-img-field');
-    const pw = wrap.querySelector('.admin-img-preview-wrap');
-    pw.innerHTML = '<div class="admin-img-placeholder">' + I.info + '<span>Uploading...</span></div>';
-    const fd = new FormData();
+    if (file.size > 5 * 1024 * 1024) { toast('Fayl juda katta (max 5MB)', 'error'); return; }
+    if (!file.type.startsWith('image/')) { toast('Faqat rasm fayllari ruxsat etiladi', 'error'); return; }
+    var wrap = input.closest('.admin-img-field');
+    var pw = wrap.querySelector('.admin-img-preview-wrap');
+    pw.innerHTML = '<div class="admin-img-placeholder">' + I.info + '<span>Yuklanmoqda...</span></div>';
+
+    var fd = new FormData();
     fd.append('file', file);
+
+    var uploadHeaders = { 'Authorization': 'Bearer ' + authToken };
+    if (csrfToken) uploadHeaders['X-CSRF-Token'] = csrfToken;
+
     try {
-      const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': 'Bearer ' + authToken }, body: fd });
-      const r = await res.json();
+      var res = await fetch('/api/upload', { method: 'POST', headers: uploadHeaders, body: fd });
+      var r = await res.json();
       if (r.success) {
         wrap.querySelector('input[data-key="' + key + '"]').value = r.path;
-        pw.innerHTML = '<img src="' + r.path + '" class="admin-img-preview" />';
-        wrap.querySelector('.admin-img-actions').innerHTML =
-          '<label class="admin-btn admin-btn-ghost admin-img-upload-btn">' + I.backup + ' Change<input type="file" accept="image/*" onchange="imgUpload(this,\'' + key + '\')" /></label>' +
-          '<button type="button" class="admin-btn admin-btn-ghost" onclick="imgClear(\'' + key + '\')">Clear</button>';
-        toast('Image uploaded', 'success');
+        pw.innerHTML = '<img src="' + esc(r.path) + '" class="admin-img-preview" />';
+        toast('Rasm yuklandi', 'success');
       } else {
-        toast('Upload failed: ' + (r.error || ''), 'error');
-        pw.innerHTML = '<div class="admin-img-placeholder">' + I.image + '<span>No image</span></div>';
+        toast('Yuklash xatosi', 'error');
+        pw.innerHTML = '<div class="admin-img-placeholder">' + I.image + '<span>Rasm yo\'q</span></div>';
       }
     } catch (e) {
-      toast('Upload error: ' + e.message, 'error');
-      pw.innerHTML = '<div class="admin-img-placeholder">' + I.image + '<span>No image</span></div>';
+      toast('Yuklash xatosi', 'error');
+      pw.innerHTML = '<div class="admin-img-placeholder">' + I.image + '<span>Rasm yo\'q</span></div>';
     }
-  };
+  }
 
-  window.imgClear = function (key) {
-    const modal = document.getElementById('admin-modal-content');
-    const wrap = modal.querySelector('.admin-img-field[data-key="' + key + '"]');
+  function handleImgClear(key) {
+    var modal = document.getElementById('admin-modal-content');
+    var wrap = modal.querySelector('.admin-img-field[data-key="' + key + '"]');
     if (!wrap) return;
     wrap.querySelector('input[data-key="' + key + '"]').value = '';
     wrap.querySelector('.admin-img-preview-wrap').innerHTML =
-      '<div class="admin-img-placeholder">' + I.image + '<span>No image</span></div>';
-    wrap.querySelector('.admin-img-actions').innerHTML =
-      '<label class="admin-btn admin-btn-ghost admin-img-upload-btn">' + I.backup + ' Choose file<input type="file" accept="image/*" onchange="imgUpload(this,\'' + key + '\')" /></label>';
-  };
+      '<div class="admin-img-placeholder">' + I.image + '<span>Rasm yo\'q</span></div>';
+  }
 
   // Collect form data
   function collectForm(sectionKey) {
-    const schema = SCHEMAS[sectionKey];
-    const item = {};
-    const modal = document.getElementById('admin-modal-content');
-    schema.fields.forEach(f => {
+    var schema = SCHEMAS[sectionKey];
+    var item = {};
+    var modal = document.getElementById('admin-modal-content');
+    schema.fields.forEach(function(f) {
       if (f.type === 'checkbox') {
-        const t = modal.querySelector('[data-key="' + f.key + '"]');
+        var t = modal.querySelector('[data-key="' + f.key + '"]');
         item[f.key] = t ? t.classList.contains('on') : false;
       } else if (f.type === 'tags') {
-        const w = modal.querySelector('.admin-tags-wrap[data-key="' + f.key + '"]');
-        item[f.key] = w ? [...w.querySelectorAll('.admin-tag-pill')].map(p => p.childNodes[0].textContent.trim()) : [];
+        var w = modal.querySelector('.admin-tags-wrap[data-key="' + f.key + '"]');
+        item[f.key] = w ? Array.from(w.querySelectorAll('.admin-tag-pill')).map(function(p) { return p.childNodes[0].textContent.trim(); }) : [];
       } else if (f.type === 'color') {
-        const inp = modal.querySelector('input[data-key="' + f.key + '"]');
+        var inp = modal.querySelector('input[data-key="' + f.key + '"]');
         item[f.key] = inp ? inp.value : '';
       } else {
-        const inp = modal.querySelector('[data-key="' + f.key + '"]');
-        if (!inp) return;
-        item[f.key] = f.type === 'number' ? (Number(inp.value) || 0) : inp.value;
+        var inp2 = modal.querySelector('[data-key="' + f.key + '"]');
+        if (!inp2) return;
+        item[f.key] = f.type === 'number' ? (Number(inp2.value) || 0) : inp2.value;
       }
     });
     return item;
   }
 
-  // Save form
-  window.formSave = function (key, isNew, idx) {
-    const schema = SCHEMAS[key];
-    const item = collectForm(key);
-    const missing = schema.fields.filter(f => f.required && !item[f.key]);
+  function handleFormSave(key, isNew, idx) {
+    var schema = SCHEMAS[key];
+    var item = collectForm(key);
+    var missing = schema.fields.filter(function(f) { return f.required && !item[f.key]; });
     if (missing.length) {
-      toast('Required fields: ' + missing.map(f => f.label).join(', '), 'error');
+      toast('Majburiy maydonlar: ' + missing.map(function(f) { return f.label; }).join(', '), 'error');
       return;
     }
     if (isNew) {
@@ -754,278 +919,267 @@
       currentData[key][idx] = item;
     }
     markUnsaved();
-    closeModal('admin-modal');
+    closeAdminModal('admin-modal');
     renderSection(document.getElementById('admin-content'), key);
     renderSidebar();
-    toast(isNew ? 'Record added' : 'Record updated', 'success');
-  };
-
-  // ───────────────────────────────────────────
-  // DRAG & DROP
-  // ───────────────────────────────────────────
-  window.dStart = function (e, idx, key) {
-    dragFromIdx = idx; dragSectionKey = key;
-    e.target.closest('.admin-item-card').classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  };
-  window.dOver = function (e) {
-    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-    const card = e.target.closest('.admin-item-card');
-    if (card) {
-      document.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
-      card.classList.add('drag-over');
-    }
-  };
-  window.dDrop = function (e, toIdx, key) {
-    e.preventDefault();
-    document.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
-    if (dragSectionKey !== key || dragFromIdx === null || dragFromIdx === toIdx) return;
-    const arr = currentData[key];
-    const [moved] = arr.splice(dragFromIdx, 1);
-    arr.splice(toIdx, 0, moved);
-    dragFromIdx = null; dragSectionKey = null;
-    markUnsaved();
-    renderSection(document.getElementById('admin-content'), key);
-    toast('Order updated', 'info');
-  };
-  window.dEnd = function (e) {
-    e.target.closest('.admin-item-card')?.classList.remove('dragging');
-    document.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
-    dragFromIdx = null;
-  };
+    toast(isNew ? 'Yozuv qo\'shildi' : 'Yozuv yangilandi', 'success');
+  }
 
   // ───────────────────────────────────────────
   // i18n EDITOR
   // ───────────────────────────────────────────
   function renderI18n(el) {
-    const keys = Object.keys(currentData.i18n.uz || {});
-    const rows = keys.map(k => '<tr>' +
-      '<td><span class="admin-i18n-key">' + esc(k) + '</span></td>' +
-      '<td><input value="' + esc(currentData.i18n.uz[k]||'') + '" data-lang="uz" data-key="' + k + '" onchange="i18nSet(this)" /></td>' +
-      '<td><input value="' + esc(currentData.i18n.en[k]||'') + '" data-lang="en" data-key="' + k + '" onchange="i18nSet(this)" /></td>' +
-      '<td><input value="' + esc(currentData.i18n.ar[k]||'') + '" data-lang="ar" data-key="' + k + '" dir="rtl" onchange="i18nSet(this)" /></td>' +
-      '<td><input value="' + esc(currentData.i18n.tr[k]||'') + '" data-lang="tr" data-key="' + k + '" onchange="i18nSet(this)" /></td>' +
-    '</tr>').join('');
+    var uzData = (currentData.i18n && currentData.i18n.uz) || {};
+    var enData = (currentData.i18n && currentData.i18n.en) || {};
+    var arData = (currentData.i18n && currentData.i18n.ar) || {};
+    var trData = (currentData.i18n && currentData.i18n.tr) || {};
+    var keys = Object.keys(uzData);
+    var rows = keys.map(function(k) {
+      return '<tr>' +
+        '<td><span class="admin-i18n-key">' + esc(k) + '</span></td>' +
+        '<td><input value="' + esc(uzData[k]||'') + '" data-lang="uz" data-key="' + esc(k) + '" /></td>' +
+        '<td><input value="' + esc(enData[k]||'') + '" data-lang="en" data-key="' + esc(k) + '" /></td>' +
+        '<td><input value="' + esc(arData[k]||'') + '" data-lang="ar" data-key="' + esc(k) + '" dir="rtl" /></td>' +
+        '<td><input value="' + esc(trData[k]||'') + '" data-lang="tr" data-key="' + esc(k) + '" /></td>' +
+      '</tr>';
+    }).join('');
 
-    el.innerHTML = `
-      <div class="admin-section-header">
-        <div class="admin-section-title">Translations <span class="admin-section-count">${keys.length} keys</span></div>
-        <button class="admin-add-btn" onclick="i18nAdd()">${I.plus} Add key</button>
-      </div>
-      <p style="font-size:11px;color:var(--text-3);margin-bottom:12px">
-        Edit all interface text for Uzbek, English, Arabic and Turkish.
-      </p>
-      <div style="overflow-x:auto">
-        <table class="admin-i18n-table">
-          <thead><tr><th style="width:140px">Key</th><th>O'zbekcha (UZ)</th><th>English (EN)</th><th>Arabic (AR)</th><th>Türkçe (TR)</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
+    el.innerHTML =
+      '<div class="admin-section-header">' +
+        '<div class="admin-section-title">Tarjimalar <span class="admin-section-count">' + keys.length + ' kalit</span></div>' +
+        '<button class="admin-add-btn" data-action="admin-i18n-add">' + I.plus + ' Kalit qo\'shish</button>' +
+      '</div>' +
+      '<p style="font-size:11px;color:var(--text-3);margin-bottom:12px">' +
+        'O\'zbek, Ingliz, Arab va Turk tillari uchun barcha interfeys matnlarini tahrirlang.' +
+      '</p>' +
+      '<div style="overflow-x:auto">' +
+        '<table class="admin-i18n-table">' +
+          '<thead><tr><th style="width:140px">Kalit</th><th>O\'zbekcha (UZ)</th><th>English (EN)</th><th>Arabic (AR)</th><th>T\u00FCrk\u00E7e (TR)</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>';
   }
 
-  window.i18nSet = function (inp) {
+  function handleI18nSet(inp) {
+    if (!currentData.i18n[inp.dataset.lang]) currentData.i18n[inp.dataset.lang] = {};
     currentData.i18n[inp.dataset.lang][inp.dataset.key] = inp.value;
     markUnsaved();
-  };
+  }
 
-  window.i18nAdd = function () {
-    const k = prompt('Enter new translation key (e.g. nav_settings):');
+  function handleI18nAdd() {
+    var k = prompt('Yangi tarjima kalitini kiriting (masalan: nav_settings):');
     if (!k || !k.trim()) return;
-    const key = k.trim();
-    if (currentData.i18n.uz[key] !== undefined) { toast('Key already exists', 'error'); return; }
-    currentData.i18n.uz[key] = '';
-    currentData.i18n.en[key] = '';
-    currentData.i18n.ar[key] = '';
-    currentData.i18n.tr[key] = '';
+    var key = k.trim();
+    if (currentData.i18n.uz && currentData.i18n.uz[key] !== undefined) { toast('Kalit allaqachon mavjud', 'error'); return; }
+    ['uz','en','ar','tr'].forEach(function(lang) {
+      if (!currentData.i18n[lang]) currentData.i18n[lang] = {};
+      currentData.i18n[lang][key] = '';
+    });
     markUnsaved();
     renderI18n(document.getElementById('admin-content'));
-    toast('Translation key added', 'success');
-  };
+    toast('Tarjima kaliti qo\'shildi', 'success');
+  }
 
   // ───────────────────────────────────────────
   // SETTINGS
   // ───────────────────────────────────────────
   function renderSettings(el) {
-    el.innerHTML = `
-      <div class="admin-dashboard-header">
-        <h1>Settings</h1>
-        <p>Admin panel configuration</p>
-      </div>
-      <div class="settings-grid">
-        <div class="settings-card">
-          <h3>Change password</h3>
-          <p>Update the admin panel login password</p>
-          <div class="settings-form">
-            <div class="admin-form-group full-width">
-              <label class="admin-form-label">Current password <span class="req">*</span></label>
-              <input type="password" class="admin-form-input" id="pwd-current" />
-            </div>
-            <div class="admin-form-group full-width">
-              <label class="admin-form-label">New password <span class="req">*</span></label>
-              <input type="password" class="admin-form-input" id="pwd-new" />
-            </div>
-            <div class="admin-form-group full-width">
-              <label class="admin-form-label">Confirm new password <span class="req">*</span></label>
-              <input type="password" class="admin-form-input" id="pwd-confirm" />
-            </div>
-          </div>
-          <button class="admin-btn admin-btn-primary" onclick="changePwd()" id="pwd-btn">Change password</button>
-          <div id="pwd-error" class="settings-error"></div>
-        </div>
-
-        <div class="settings-card">
-          <h3>Backup</h3>
-          <p>Create a manual backup. Automatic backups are created on every save.</p>
-          <button class="admin-btn admin-btn-ghost" onclick="manualBackup()">Create backup</button>
-        </div>
-
-        <div class="settings-card">
-          <h3>About</h3>
-          <p>IBXI Admin Panel v2.0</p>
-          <div style="font-size:11px;color:var(--text-3);line-height:2">
-            <div>Default password: <code>ide2025admin</code></div>
-            <div>Data file: <code>assets/js/data.js</code></div>
-            <div>Backups: <code>backups/</code></div>
-          </div>
-        </div>
-      </div>`;
+    el.innerHTML =
+      '<div class="admin-dashboard-header">' +
+        '<h1>Sozlamalar</h1>' +
+        '<p>Admin panel konfiguratsiyasi</p>' +
+      '</div>' +
+      '<div class="settings-grid">' +
+        '<div class="settings-card">' +
+          '<h3>Parolni o\'zgartirish</h3>' +
+          '<p>Admin panel kirish parolini yangilang</p>' +
+          '<div class="settings-form">' +
+            '<div class="admin-form-group full-width">' +
+              '<label class="admin-form-label">Joriy parol <span class="req">*</span></label>' +
+              '<input type="password" class="admin-form-input" id="pwd-current" />' +
+            '</div>' +
+            '<div class="admin-form-group full-width">' +
+              '<label class="admin-form-label">Yangi parol <span class="req">*</span></label>' +
+              '<input type="password" class="admin-form-input" id="pwd-new" />' +
+            '</div>' +
+            '<div class="admin-form-group full-width">' +
+              '<label class="admin-form-label">Yangi parolni tasdiqlang <span class="req">*</span></label>' +
+              '<input type="password" class="admin-form-input" id="pwd-confirm" />' +
+            '</div>' +
+          '</div>' +
+          '<button class="admin-btn admin-btn-primary" data-action="admin-pwd" id="pwd-btn">Parolni o\'zgartirish</button>' +
+          '<div id="pwd-error" class="settings-error"></div>' +
+        '</div>' +
+        '<div class="settings-card">' +
+          '<h3>Zaxira nusxa</h3>' +
+          '<p>Qo\'lda zaxira nusxa yarating. Har bir saqlashda avtomatik zaxira yaratiladi.</p>' +
+          '<button class="admin-btn admin-btn-ghost" data-action="admin-backup">Zaxira yaratish</button>' +
+        '</div>' +
+        '<div class="settings-card">' +
+          '<h3>Haqida</h3>' +
+          '<p>IBXI Admin Panel v2.0 (Xavfsiz)</p>' +
+          '<div style="font-size:11px;color:var(--text-3);line-height:2">' +
+            '<div>Ma\'lumotlar bazasi: <code>ibxi.db</code> (SQLite)</div>' +
+            '<div>Zaxiralar: <code>backups/</code></div>' +
+            '<div>Xavfsizlik: PBKDF2, CSRF, Rate Limiting</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
   }
 
-  window.changePwd = async function () {
-    const cur = document.getElementById('pwd-current').value;
-    const np = document.getElementById('pwd-new').value;
-    const conf = document.getElementById('pwd-confirm').value;
-    const err = document.getElementById('pwd-error');
-    const btn = document.getElementById('pwd-btn');
+  async function changePwd() {
+    var cur = document.getElementById('pwd-current').value;
+    var np = document.getElementById('pwd-new').value;
+    var conf = document.getElementById('pwd-confirm').value;
+    var err = document.getElementById('pwd-error');
+    var btn = document.getElementById('pwd-btn');
     err.textContent = '';
-    if (!cur || !np || !conf) { err.textContent = 'All fields required'; return; }
-    if (np.length < 6) { err.textContent = 'Password must be at least 6 characters'; return; }
-    if (np !== conf) { err.textContent = 'Passwords do not match'; return; }
-    btn.disabled = true; btn.textContent = 'Changing...';
+    if (!cur || !np || !conf) { err.textContent = 'Barcha maydonlar to\'ldirilishi shart'; return; }
+    if (np.length < 8) { err.textContent = 'Parol kamida 8 belgidan iborat bo\'lishi kerak'; return; }
+    if (np !== conf) { err.textContent = 'Parollar mos kelmaydi'; return; }
+    btn.disabled = true; btn.textContent = 'O\'zgartirilmoqda...';
     try {
-      const r = await api('POST', '/api/password', { current: cur, new: np });
+      var r = await api('POST', '/api/password', { current: cur, new: np });
       if (r.success) {
-        toast('Password changed', 'success');
+        toast('Parol o\'zgartirildi', 'success');
         document.getElementById('pwd-current').value = '';
         document.getElementById('pwd-new').value = '';
         document.getElementById('pwd-confirm').value = '';
-      } else { err.textContent = r.error || 'Error'; }
-    } catch (e) { err.textContent = 'Connection error'; }
-    btn.disabled = false; btn.textContent = 'Change password';
-  };
+      } else { err.textContent = r.error || 'Xatolik'; }
+    } catch (e) { err.textContent = 'Ulanish xatosi'; }
+    btn.disabled = false; btn.textContent = 'Parolni o\'zgartirish';
+  }
 
-  window.manualBackup = async function () {
+  async function manualBackup() {
     try {
-      const r = await api('POST', '/api/backup');
-      if (r.success) toast('Backup created: ' + r.filename, 'success');
-    } catch (e) { toast('Backup failed', 'error'); }
-  };
+      var r = await api('POST', '/api/backup');
+      if (r.success) toast('Zaxira yaratildi: ' + r.filename, 'success');
+    } catch (e) { toast('Zaxira yaratish xatosi', 'error'); }
+  }
 
   // ───────────────────────────────────────────
-  // SAVE ALL
+  // SAVE ALL (with auto-save)
   // ───────────────────────────────────────────
-  window.saveAll = async function () {
-    const btn = document.getElementById('save-btn');
-    btn.disabled = true; btn.innerHTML = I.save + ' Saving...';
+  async function saveAll() {
+    var btn = document.getElementById('save-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = I.save + ' Saqlanmoqda...'; }
     try {
-      const r = await api('POST', '/api/data', currentData);
+      var r = await api('POST', '/api/data', currentData);
       if (r.success) {
         hasUnsaved = false;
-        toast('Saved. Backup: ' + r.backup, 'success');
+        clearTimeout(autoSaveTimeout);
+        toast('Saqlandi. Zaxira: ' + (r.backup || ''), 'success');
       } else {
-        toast('Save error: ' + (r.error || ''), 'error');
+        toast('Saqlash xatosi', 'error');
       }
-    } catch (e) { toast('Save error: ' + e.message, 'error'); }
-    btn.disabled = false;
+    } catch (e) { toast('Saqlash xatosi', 'error'); }
+    if (btn) btn.disabled = false;
     renderTopbar();
-  };
+  }
 
   // ───────────────────────────────────────────
   // LOGOUT
   // ───────────────────────────────────────────
-  window.doLogout = function () {
-    showConfirm('Logout?',
-      hasUnsaved ? 'You have unsaved changes.' : 'You will be redirected to the login page.',
-      () => {
-        sessionStorage.removeItem('ibxi_admin_token');
-        authToken = null; currentData = null; hasUnsaved = false;
+  function handleLogout() {
+    showConfirm('Chiqilsinmi?',
+      hasUnsaved ? 'Saqlanmagan o\'zgarishlar bor.' : 'Login sahifasiga qaytasiz.',
+      function() {
+        api('POST', '/api/logout');
+        clearAuth();
+        currentData = null;
+        hasUnsaved = false;
         document.getElementById('admin-app').style.display = 'none';
         document.getElementById('login-screen').style.display = '';
         document.getElementById('login-password').value = '';
       });
-  };
+  }
 
   // ───────────────────────────────────────────
   // THEME
   // ───────────────────────────────────────────
-  window.toggleTheme = function () {
+  function toggleAdminTheme() {
     darkMode = !darkMode;
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
     localStorage.setItem('ibxi_theme', darkMode ? 'dark' : 'light');
     renderTopbar();
-  };
+  }
 
   // ───────────────────────────────────────────
   // HELPERS
   // ───────────────────────────────────────────
   function nextId(key) {
-    const items = currentData[key] || [];
+    var items = currentData[key] || [];
     if (!items.length) return 1;
-    return Math.max(...items.map(i => i.id || 0)) + 1;
+    return Math.max.apply(null, items.map(function(i) { return i.id || 0; })) + 1;
   }
 
-  function markUnsaved() { hasUnsaved = true; renderTopbar(); }
+  function markUnsaved() {
+    hasUnsaved = true;
+    renderTopbar();
+    // Auto-save after 30 seconds of inactivity
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(function() {
+      if (hasUnsaved) {
+        saveAll();
+        toast('Avtomatik saqlandi', 'info');
+      }
+    }, 30000);
+  }
 
   function esc(s) {
     if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
   }
 
   // ───────────────────────────────────────────
   // MODAL & CONFIRM
   // ───────────────────────────────────────────
-  function openModal(id) { document.getElementById(id).classList.add('show'); }
-  window.closeModal = function (id) { document.getElementById(id).classList.remove('show'); };
+  function openAdminModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeAdminModal(id) { document.getElementById(id).classList.remove('show'); }
 
   function showConfirm(title, msg, cb) {
     confirmCallback = cb;
     document.getElementById('confirm-content').innerHTML =
       '<div class="admin-confirm">' +
         '<div class="admin-confirm-icon">' + I.warning + '</div>' +
-        '<h3>' + title + '</h3>' +
-        '<p>' + msg + '</p>' +
+        '<h3>' + esc(title) + '</h3>' +
+        '<p>' + esc(msg) + '</p>' +
         '<div class="admin-confirm-actions">' +
-          '<button class="admin-btn admin-btn-ghost" onclick="closeModal(\'confirm-modal\')">Cancel</button>' +
-          '<button class="admin-btn admin-btn-danger" onclick="doConfirmAction()">Confirm</button>' +
+          '<button class="admin-btn admin-btn-ghost" data-action="admin-modal-close" data-modal="confirm-modal">Bekor qilish</button>' +
+          '<button class="admin-btn admin-btn-danger" data-action="admin-confirm">Tasdiqlash</button>' +
         '</div>' +
       '</div>';
-    openModal('confirm-modal');
+    openAdminModal('confirm-modal');
   }
-  window.doConfirmAction = function () {
-    closeModal('confirm-modal');
+
+  function handleConfirmAction() {
+    closeAdminModal('confirm-modal');
     if (confirmCallback) confirmCallback();
     confirmCallback = null;
-  };
+  }
 
   // ───────────────────────────────────────────
   // TOAST
   // ───────────────────────────────────────────
   function toast(msg, type) {
-    const iconMap = { success: I.check, error: I.error, info: I.info, warning: I.warning };
-    const c = document.getElementById('toast-container');
-    const t = document.createElement('div');
+    var iconMap = { success: I.check, error: I.error, info: I.info, warning: I.warning };
+    var c = document.getElementById('toast-container');
+    var t = document.createElement('div');
     t.className = 'toast ' + (type || 'info');
     t.innerHTML = '<span class="toast-icon">' + (iconMap[type] || I.info) + '</span><span class="toast-msg">' + esc(msg) + '</span>';
     c.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('show'));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+    requestAnimationFrame(function() { t.classList.add('show'); });
+    setTimeout(function() { t.classList.remove('show'); setTimeout(function() { t.remove(); }, 300); }, 3000);
   }
 
   // ───────────────────────────────────────────
   // UNSAVED WARNING
   // ───────────────────────────────────────────
-  window.addEventListener('beforeunload', e => {
+  window.addEventListener('beforeunload', function(e) {
     if (hasUnsaved) { e.preventDefault(); e.returnValue = ''; }
   });
+
+  // Expose closeModal for HTML onclick in admin.html
+  window.closeModal = closeAdminModal;
 
 })();

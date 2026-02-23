@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="uz" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>IBXI Admin Panel</title>
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/admin.css" />
@@ -15,12 +16,12 @@
   <div class="admin-login-card">
     <img src="assets/img/logo-gold.png" alt="Logo" style="width:48px;height:48px;object-fit:contain;margin-bottom:12px" />
     <h1>IBXI Admin Panel</h1>
-    <p class="login-sub">Login to manage application content</p>
-    <form onsubmit="handleLogin(event)">
-      <input type="password" id="login-password" placeholder="Enter admin password" autocomplete="current-password" autofocus />
-      <button type="submit" class="admin-login-btn" id="login-btn">Login</button>
+    <p class="login-sub">Boshqaruv paneliga kirish</p>
+    <form id="login-form">
+      <input type="password" id="login-password" placeholder="Admin parolini kiriting" autocomplete="current-password" autofocus />
+      <button type="submit" class="admin-login-btn" id="login-btn">Kirish</button>
     </form>
-    <div class="login-error" id="login-error"></div>
+    <div class="login-error" id="login-error" role="alert"></div>
   </div>
 </div>
 
@@ -39,22 +40,22 @@
 </div>
 
 <!-- EDIT MODAL -->
-<div class="modal-backdrop" id="admin-modal">
+<div class="modal-backdrop" id="admin-modal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:680px;max-height:90vh;overflow-y:auto">
-    <button class="modal-close" onclick="closeModal('admin-modal')">&#10005;</button>
+    <button class="modal-close" data-action="close-modal" data-modal="admin-modal" aria-label="Yopish">&#10005;</button>
     <div id="admin-modal-content"></div>
   </div>
 </div>
 
 <!-- CONFIRM DIALOG -->
-<div class="modal-backdrop" id="confirm-modal">
+<div class="modal-backdrop" id="confirm-modal" role="dialog" aria-modal="true">
   <div class="modal-box" style="max-width:400px">
     <div id="confirm-content"></div>
   </div>
 </div>
 
 <!-- TOAST CONTAINER -->
-<div class="toast-container" id="toast-container"></div>
+<div class="toast-container" id="toast-container" role="alert" aria-live="polite"></div>
 
 <!-- SCRIPTS -->
 <script src="assets/js/admin.js"></script>
