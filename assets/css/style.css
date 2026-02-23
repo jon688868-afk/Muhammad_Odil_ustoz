@@ -107,26 +107,26 @@
    DARK THEME
 --------------------------------------------------------- */
 [data-theme="dark"] {
-  --page-bg:        #0c2e20;
-  --surface-1:      #113d2c;
-  --surface-2:      #164a36;
-  --surface-3:      #1a5540;
-  --surface-hover:  #1e6048;
-  --surface-active: #226b50;
+  --page-bg:        #0e3627;
+  --surface-1:      #154a35;
+  --surface-2:      #1a5840;
+  --surface-3:      #20654c;
+  --surface-hover:  #267256;
+  --surface-active: #2c7f60;
 
   /* WCAG AA-compliant text colors on dark backgrounds */
   --text-1:   #f0fff8;
-  --text-2:   #a0d4bb;
-  --text-3:   #8ec4a8;  /* Fixed: 4.5:1+ contrast on #113d2c */
-  --text-inv: #0c2e20;
+  --text-2:   #b0dcc8;
+  --text-3:   #96ccb2;
+  --text-inv: #0e3627;
 
-  --border-1: rgba(255,255,255,.08);
-  --border-2: rgba(255,255,255,.12);
-  --border-3: rgba(255,255,255,.16);
+  --border-1: rgba(255,255,255,.10);
+  --border-2: rgba(255,255,255,.14);
+  --border-3: rgba(255,255,255,.18);
 
-  --sidebar-bg:    #092419;
-  --sidebar-item:  rgba(255,255,255,.06);
-  --topbar-bg:     rgba(12,46,32,.88);
+  --sidebar-bg:    #0c3020;
+  --sidebar-item:  rgba(255,255,255,.07);
+  --topbar-bg:     rgba(14,54,39,.90);
 
   --glass-bg:      rgba(17,61,44,.75);
   --glass-border:  rgba(255,255,255,.07);
@@ -139,12 +139,12 @@
    LIGHT THEME
 --------------------------------------------------------- */
 [data-theme="light"] {
-  --page-bg:        #f0f5f2;
+  --page-bg:        #f5f8f6;
   --surface-1:      #ffffff;
-  --surface-2:      #f5f9f7;
-  --surface-3:      #ecf2ee;
-  --surface-hover:  #e6efe9;
-  --surface-active: #dce8e0;
+  --surface-2:      #f8fbf9;
+  --surface-3:      #eff5f1;
+  --surface-hover:  #e8f0eb;
+  --surface-active: #dfe9e3;
 
   /* WCAG AA-compliant text colors on light backgrounds */
   --text-1:   #0a2a1c;
@@ -839,14 +839,14 @@ mark {
   overflow: hidden;
 }
 
-/* Islamic pattern overlay */
+/* Islamic/Arabic pattern overlay */
 .page-hero::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image: var(--islamic-pattern);
   background-size: 100px 100px;
-  opacity: 0.06;
+  opacity: 0.10;
   pointer-events: none;
 }
 
@@ -2608,6 +2608,8 @@ mark {
   color: rgba(255,255,255,.5);
   text-decoration: none;
   transition: color var(--t-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .footer-links a:hover {

@@ -167,16 +167,12 @@
   function renderTopbar() {
     var topbar = document.getElementById('topbar');
     if (!topbar) return;
-    var unread    = notifRead ? 0 : 3;
     var themeIcon = darkMode ? '☀️' : '🌙';
     var searchPh  = currentLang === 'uz' ? 'Qidirish...' : currentLang === 'en' ? 'Search...' : currentLang === 'tr' ? 'Ara...' : 'بحث...';
     var themeTip  = currentLang === 'uz' ? 'Mavzuni almashtirish' : 'Toggle Theme';
-    var notifTip  = currentLang === 'uz' ? 'Bildirishnomalar' : 'Notifications';
-    var badgeHTML = unread > 0 ? '<span class="notif-dot" id="notif-badge">' + unread + '</span>' : '';
 
     topbar.innerHTML = '<div class="topbar-left">'
       + '<button id="toggle-sidebar" class="tb-toggle" data-action="toggle-sidebar" title="Menyuni yashirish">☰</button>'
-      + '<div class="breadcrumb"><span class="bc-current" id="breadcrumb-label">' + esc(DATA.i18n[currentLang].nav_home) + '</span></div>'
       + '</div>'
       + '<div class="topbar-right">'
       + '<div class="search-wrap" id="search-container" style="position:relative">'
@@ -184,8 +180,6 @@
       + '<input type="text" id="search-input" placeholder="' + escAttr(searchPh) + '" autocomplete="off" /></div>'
       + '<div class="search-results" id="search-results"></div>'
       + '</div>'
-      + '<button class="tb-btn" data-action="toggle-theme" id="theme-toggle" title="' + escAttr(themeTip) + '">' + themeIcon + '</button>'
-      + '<button class="tb-btn" data-action="open-notifications" title="' + escAttr(notifTip) + '" style="position:relative">🔔' + badgeHTML + '</button>'
       + '<div class="lang-dropdown" id="lang-dropdown">'
       + '<button class="tb-btn" data-action="toggle-lang-dd" title="Til / Language">' + esc(currentLang.toUpperCase()) + '</button>'
       + '<div class="lang-dropdown-menu" id="lang-dropdown-menu">'
@@ -194,6 +188,7 @@
       + '<button class="lang-dd-item ' + (currentLang === 'ar' ? 'active' : '') + '" data-action="set-lang" data-lang="ar"><span class="lang-dd-code">عر</span><span class="lang-dd-name">العربية</span></button>'
       + '<button class="lang-dd-item ' + (currentLang === 'tr' ? 'active' : '') + '" data-action="set-lang" data-lang="tr"><span class="lang-dd-code">TR</span><span class="lang-dd-name">Türkçe</span></button>'
       + '</div></div>'
+      + '<button class="tb-btn" data-action="toggle-theme" id="theme-toggle" title="' + escAttr(themeTip) + '">' + themeIcon + '</button>'
       + '</div>';
   }
 
@@ -263,22 +258,6 @@
       document.querySelectorAll('.nav-item').forEach(function (n) {
         n.classList.toggle('active', n.dataset.page === pageId);
       });
-
-      var labels = {
-        home:          DATA.i18n[currentLang].nav_home,
-        foundation:    DATA.i18n[currentLang].nav_foundation,
-        corporate:     DATA.i18n[currentLang].nav_corporate,
-        research:      DATA.i18n[currentLang].nav_research,
-        academy:       DATA.i18n[currentLang].nav_academy,
-        international: DATA.i18n[currentLang].nav_international,
-        publications:  DATA.i18n[currentLang].nav_publications,
-        blog:          DATA.i18n[currentLang].nav_blog,
-        gallery:       DATA.i18n[currentLang].nav_gallery,
-        archive:       DATA.i18n[currentLang].nav_archive,
-        contact:       DATA.i18n[currentLang].nav_contact,
-      };
-      var el = document.getElementById('breadcrumb-label');
-      if (el && labels[pageId]) el.textContent = labels[pageId];
 
       // Update hash
       if (window.location.hash !== '#' + pageId) {
@@ -435,7 +414,7 @@
         + '<span class="news-chip">' + esc(L(n,'tag','tag_en','tag_ar','tag_tr')) + '</span>'
         + '<h3>' + esc(L(n,'title','title_en','title_ar','title_tr')) + '</h3>'
         + '<p style="font-size:12px;color:var(--text-3);line-height:1.5;margin:6px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + esc(L(n,'summary','summary_en','summary_ar','summary_tr')) + '</p>'
-        + '<div class="news-meta"><span>📅 ' + esc(n.date) + '</span><span>• ' + esc(n.readTime || n.category) + '</span></div>'
+        + '<div class="news-meta"><span>📅 ' + esc(formatDate(n.date)) + '</span><span>• ' + esc(n.readTime || n.category) + '</span></div>'
         + '</div></div>';
     }).join('');
 
@@ -500,15 +479,15 @@
     }).join('');
 
     return '<div class="page" id="page-home">'
-      + '<div class="hero-banner"><div class="hero-content">'
+      + '<div class="page-hero" style="padding:var(--sp-12) var(--sp-10)">'
+      + '<div style="position:relative;z-index:1">'
       + '<div class="hero-eyebrow">Imam Bukhari International Institute</div>'
       + '<h1>' + esc(t.hero_title) + '</h1>'
-      + '<p>' + esc(t.hero_sub) + '</p>'
-      + '<div class="hero-actions">'
+      + '<p style="max-width:600px">' + esc(t.hero_sub) + '</p>'
+      + '<div class="hero-actions" style="margin-top:var(--sp-6)">'
       + '<button class="btn btn-gold btn-lg" data-action="navigate" data-page="research">' + esc(t.hero_btn1) + '</button>'
       + '<button class="btn btn-outline btn-lg" data-action="navigate" data-page="academy">' + esc(t.hero_btn2) + '</button>'
       + '</div></div>'
-      + '<div class="hero-deco"><img src="assets/img/logo-white.png" alt="" style="width:110px;height:110px;object-fit:contain;opacity:.12" /></div>'
       + '</div>'
       + '<div class="stats-row">' + statsHTML + '</div>'
       + sectionHead(t.section_news, seeAllNews, 'archive')
@@ -1117,7 +1096,7 @@
         + '<div style="height:6px;background:linear-gradient(135deg,' + b.color + ',var(--gold));border-radius:3px;margin-bottom:16px"></div>'
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
         + '<span class="chip chip-gold" style="font-size:10px">' + esc(b.category) + '</span>'
-        + '<span style="font-size:11px;color:var(--text-3)">📅 ' + esc(b.date) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-3)">📅 ' + esc(formatDate(b.date)) + '</span>'
         + '</div>'
         + '<h3 style="font-size:15px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:8px">' + esc(L(b,'title','title_en','title_ar','title_tr')) + '</h3>'
         + '<p style="font-size:12.5px;color:var(--text-3);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:14px">' + esc(L(b,'excerpt','excerpt_en','excerpt_ar','excerpt_tr')) + '</p>'
@@ -1177,7 +1156,7 @@
         + '<div style="padding:14px 16px">'
         + '<span class="chip chip-gold" style="font-size:10px;margin-bottom:8px;display:inline-flex">' + esc(g.category) + '</span>'
         + '<h4 style="font-size:14px;font-weight:600;color:var(--text-1);line-height:1.4;margin-bottom:6px">' + esc(L(g,'title','title_en','title_ar','title_tr')) + '</h4>'
-        + '<div style="font-size:11px;color:var(--text-3)">📅 ' + esc(g.date) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3)">📅 ' + esc(formatDate(g.date)) + '</div>'
         + '</div></div>';
     }).join('');
 
@@ -1234,7 +1213,7 @@
         + '<div style="flex:1">'
         + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
         + '<span class="chip chip-gold" style="font-size:10px">' + esc(L(n,'tag','tag_en','tag_ar','tag_tr')) + '</span>'
-        + '<span style="font-size:11px;color:var(--text-3)">📅 ' + esc(n.date) + '</span>'
+        + '<span style="font-size:11px;color:var(--text-3)">📅 ' + esc(formatDate(n.date)) + '</span>'
         + '</div>'
         + '<h4 style="font-size:14px;font-weight:600;color:var(--text-1);line-height:1.5">' + esc(L(n,'title','title_en','title_ar','title_tr')) + '</h4>'
         + '</div>'
@@ -1361,7 +1340,7 @@
       + '<span class="chip chip-gold">' + esc(L(n,'tag','tag_en','tag_ar','tag_tr')) + '</span></div>'
       + '<h2 style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:12px;line-height:1.4">' + esc(L(n,'title','title_en','title_ar','title_tr')) + '</h2>'
       + '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
-      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(n.date) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(formatDate(n.date)) + '</span>'
       + '<span style="font-size:12px;color:var(--text-3)">🏷️ ' + esc(n.category) + '</span>'
       + '</div>'
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.8;margin-bottom:12px">' + (n.summary ? esc(L(n,'summary','summary_en','summary_ar','summary_tr')) : '') + '</p>'
@@ -1594,7 +1573,7 @@
       '<div style="margin-bottom:16px">'
       + '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">'
       + '<span class="chip chip-gold">' + esc(b.category) + '</span>'
-      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(b.date) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(formatDate(b.date)) + '</span>'
       + '<span style="font-size:12px;color:var(--text-3)">⏱ ' + esc(b.readTime) + '</span>'
       + '</div>'
       + '<h2 style="font-size:18px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:12px">' + esc(L(b,'title','title_en','title_ar','title_tr')) + '</h2>'
@@ -1627,7 +1606,7 @@
       + '<h2 style="font-size:18px;font-weight:700;color:var(--text-1);margin-bottom:10px">' + esc(L(g,'title','title_en','title_ar','title_tr')) + '</h2>'
       + '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
       + '<span class="chip chip-gold">' + esc(g.category) + '</span>'
-      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(g.date) + '</span>'
+      + '<span style="font-size:12px;color:var(--text-3)">📅 ' + esc(formatDate(g.date)) + '</span>'
       + '</div>'
       + '<button class="btn btn-gold" data-action="toast" data-msg="' + galMsg + '" data-type="info" data-icon="🖼️">🖼️ ' + esc(isEn ? 'View Gallery' : 'Galereyani ko\'rish') + '</button>';
     openModal('news-modal');
