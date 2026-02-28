@@ -2166,6 +2166,7 @@ mark {
 }
 
 .toast.success { border-left: 3px solid var(--color-success); }
+.toast.error   { border-left: 3px solid var(--color-danger); }
 .toast.info    { border-left: 3px solid var(--gold); }
 .toast.warning { border-left: 3px solid var(--color-warning); }
 
@@ -2806,6 +2807,7 @@ mark {
 
 /* Toast border accent flip */
 [dir="rtl"] .toast.success { border-left: none; border-right: 3px solid var(--color-success); }
+[dir="rtl"] .toast.error   { border-left: none; border-right: 3px solid var(--color-danger); }
 [dir="rtl"] .toast.info    { border-left: none; border-right: 3px solid var(--gold); }
 [dir="rtl"] .toast.warning { border-left: none; border-right: 3px solid var(--color-warning); }
 

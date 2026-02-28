@@ -438,7 +438,7 @@
       lang === 'en' ? 'English selected' :
       lang === 'tr' ? 'Türkçe seçildi' :
       'تم اختيار العربية',
-      'success', _s(IC.check)
+      'success', IC.check
     );
   }
 
@@ -731,7 +731,7 @@
     var boardsHTML = boards.map(function (b) {
       var arr = isEn ? b.en : b.uz;
       return '<div class="card card-hover">'
-        + '<div style="font-size:32px;margin-bottom:14px">' + b.icon + '</div>'
+        + '<div style="font-size:32px;margin-bottom:14px">' + _s(b.icon, 32) + '</div>'
         + '<h3 style="font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:8px">' + esc(arr[0]) + '</h3>'
         + '<span class="chip chip-gold" style="margin-bottom:12px;display:inline-flex">' + esc(arr[1]) + '</span>'
         + '<p style="font-size:13px;color:var(--text-2);line-height:1.7">' + esc(arr[2]) + '</p>'
@@ -1101,8 +1101,8 @@
       + '<button class="tab-btn" data-action="switch-tab" data-group="pub" data-tab="journals">' + _i(IC.newspaper) + ' ' + esc(isEn ? 'Journals' : 'Jurnallar') + '</button>'
       + '</div>'
       + '<div class="tab-content active" id="pub-all">' + renderPubList(pubs) + '</div>'
-      + '<div class="tab-content" id="pub-books">' + renderPubList(pubs.filter(function (p) { return p.type === 'Kitap'; })) + '</div>'
-      + '<div class="tab-content" id="pub-articles">' + renderPubList(pubs.filter(function (p) { return p.type !== 'Kitap'; })) + '</div>'
+      + '<div class="tab-content" id="pub-books">' + renderPubList(pubs.filter(function (p) { return p.type === 'Kitob'; })) + '</div>'
+      + '<div class="tab-content" id="pub-articles">' + renderPubList(pubs.filter(function (p) { return p.type !== 'Kitob'; })) + '</div>'
       + '<div class="tab-content" id="pub-journals"><div class="g-2">' + jrnlsHTML + '</div></div>'
       + '</div>';
   }
@@ -1942,7 +1942,7 @@
       setTimeout(function () {
         btn.disabled  = false;
         btn.textContent = origText;
-        showToast(t.form_success, 'success', _s(IC.check));
+        showToast(t.form_success, 'success', IC.check);
         form.reset();
       }, 1200);
     }
@@ -1976,7 +1976,7 @@
     var name = currentLang === 'en' ? p.title_en : currentLang === 'tr' ? (p.title_tr || p.title) : p.title;
     showToast(
       '"' + name + '" ' + (currentLang === 'en' ? 'application submitted!' : currentLang === 'tr' ? 'başvurunuz alındı!' : 'dasturiga arizangiz qabul qilindi!'),
-      'success', _s(IC.check)
+      'success', IC.check
     );
     navigateTo('academy');
     setTimeout(function () { switchTab('academy', 'apply'); }, 200);

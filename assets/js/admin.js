@@ -84,7 +84,7 @@
         { key: 'summary_ar', type: 'textarea', label: 'Summary (AR)', dir: 'rtl' },
         { key: 'date', type: 'text', label: 'Sana', half: true, placeholder: '15 Yanvar 2025' },
         { key: 'category', type: 'select', label: 'Kategoriya', half: true,
-          options: ['Tadbir', 'Nashr', 'Akademiya', 'Xalqaro', 'Tadqiqot', 'Konferensiya'] },
+          options: ['Tadbir', 'Nashr', 'Akademiya', 'Xalqaro', 'Tadqiqot'] },
         { key: 'color', type: 'color', label: 'Rang', half: true },
         { key: 'author', type: 'text', label: 'Muallif', half: true },
         { key: 'readTime', type: 'text', label: 'O\'qish vaqti', half: true, placeholder: '3 daq' },
@@ -313,6 +313,7 @@
         case 'admin-confirm': handleConfirmAction(); break;
         case 'admin-img-clear': handleImgClear(el.dataset.key); break;
         case 'admin-toggle': handleToggleClick(el); break;
+        case 'admin-mobile-menu': toggleMobileSidebar(); break;
       }
     });
 
@@ -491,7 +492,7 @@
         err.textContent = r.error || 'Noto\'g\'ri parol';
       }
     } catch (ex) { err.textContent = 'Ulanish xatosi'; }
-    btn.disabled = false; btn.textContent = 'Login';
+    btn.disabled = false; btn.textContent = 'Kirish';
   }
 
   function showApp() {
@@ -507,6 +508,7 @@
   // ───────────────────────────────────────────
   function nav(section) {
     currentSection = section;
+    closeMobileSidebar();
     renderSidebar();
     renderTopbar();
     var el = document.getElementById('admin-content');
@@ -515,7 +517,8 @@
     else if (section === 'settings') renderSettings(el);
     else if (section === 'activity') renderActivity(el);
     else renderSection(el, section);
-    el.scrollTop = 0;
+    window.scrollTo(0, 0);
+    document.getElementById('admin-main').scrollTop = 0;
   }
 
   // ───────────────────────────────────────────
@@ -574,6 +577,9 @@
     var label = labels[currentSection] || (SCHEMAS[currentSection] ? SCHEMAS[currentSection].label : currentSection);
     tb.innerHTML =
       '<div class="admin-topbar-left">' +
+        '<button class="admin-topbar-btn admin-mobile-menu-btn" data-action="admin-mobile-menu">' +
+          '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>' +
+        '</button>' +
         '<span class="admin-breadcrumb">' + esc(label) + '</span>' +
       '</div>' +
       '<div class="admin-topbar-right">' +
@@ -622,7 +628,7 @@
     el.innerHTML = '<div class="admin-dashboard-header"><h1>Activity Log</h1><p>Oxirgi amallar tarixi</p></div><div style="text-align:center;padding:24px;color:var(--text-3)">Yuklanmoqda...</div>';
     try {
       var r = await api('GET', '/api/audit');
-      if (r && r.items) {
+      if (r && r.items && r.items.length) {
         var rows = r.items.map(function(a) {
           return '<tr>' +
             '<td style="white-space:nowrap">' + esc(a.timestamp || '') + '</td>' +
@@ -638,6 +644,9 @@
             '<thead><tr><th>Vaqt</th><th>Amal</th><th>Bo\'lim</th><th>Tafsilot</th><th>IP</th></tr></thead>' +
             '<tbody>' + rows + '</tbody>' +
           '</table></div>';
+      } else {
+        el.innerHTML = '<div class="admin-dashboard-header"><h1>Activity Log</h1><p>Oxirgi amallar tarixi</p></div>' +
+          '<div class="admin-empty"><div class="admin-empty-icon">' + I.activity + '</div><div class="admin-empty-text">Hozircha amallar yo\'q</div></div>';
       }
     } catch (e) {
       el.innerHTML = '<div class="admin-dashboard-header"><h1>Activity Log</h1></div><p style="color:var(--text-3)">Yuklab bo\'lmadi</p>';
@@ -768,7 +777,7 @@
       }
       if (f.type === 'checkbox') {
         return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + '</label>' +
-          '<div data-action="admin-toggle">' +
+          '<div class="admin-toggle" data-action="admin-toggle">' +
             '<div class="admin-toggle-track ' + (val?'on':'') + '" data-key="' + f.key + '"><div class="admin-toggle-thumb"></div></div>' +
             '<span class="admin-toggle-label">' + (val ? 'Ha' : 'Yo\'q') + '</span>' +
           '</div></div>';
@@ -1092,6 +1101,20 @@
         document.getElementById('login-screen').style.display = '';
         document.getElementById('login-password').value = '';
       });
+  }
+
+  // ───────────────────────────────────────────
+  // MOBILE SIDEBAR
+  // ───────────────────────────────────────────
+  function toggleMobileSidebar() {
+    var sb = document.getElementById('admin-sidebar');
+    sb.classList.toggle('open');
+  }
+
+  // Close sidebar on nav click (mobile)
+  function closeMobileSidebar() {
+    var sb = document.getElementById('admin-sidebar');
+    if (sb) sb.classList.remove('open');
   }
 
   // ───────────────────────────────────────────

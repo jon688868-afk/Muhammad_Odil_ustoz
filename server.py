@@ -35,7 +35,7 @@ import database as db
 # ─── Configuration ─────────────────────────────────────────────────────────
 
 PORT = 8765
-HOST = '0.0.0.0'
+HOST = '127.0.0.1'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, 'assets', 'js', 'data.js')
 BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
@@ -658,6 +658,8 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/backup':
             token = self.require_auth()
             if not token:
+                return
+            if not self.require_csrf(token):
                 return
 
             try:
