@@ -661,7 +661,7 @@ select.admin-form-input {
 #admin-modal .modal-box,
 #confirm-modal .modal-box {
   border-radius: var(--a-r-modal);
-  padding: 28px;
+  padding: clamp(16px, 4vw, 28px);
   box-shadow: var(--a-sh-modal);
 }
 
@@ -706,5 +706,14 @@ select.admin-form-input {
   }
   #admin-sidebar.open { transform: translateX(0); }
   #admin-topbar { left: 0; }
-  #admin-main { margin-left: 0; }
+  #admin-main { margin-left: 0; padding: 12px; }
+  #admin-modal .modal-box,
+  #confirm-modal .modal-box {
+    padding: 14px;
+    width: 98%;
+  }
+  .admin-stat-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
 }

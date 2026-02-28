@@ -1298,7 +1298,7 @@
       + '<p>' + esc(isEn ? 'All news, events, publications and activities' : 'Barcha yangiliklar, tadbirlar, nashrlar va faoliyatlar') + '</p>'
       + '</div>'
       + '<div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap">'
-      + '<div class="search-box" style="width:280px;flex-shrink:0">' + '<span class="si">' + IC.search + '</span>' + ''
+      + '<div class="search-box search-box--archive">' + '<span class="si">' + IC.search + '</span>' + ''
       + '<input type="text" id="archive-search-input" placeholder="' + escAttr(isEn ? 'Search news...' : 'Yangilik qidirish...') + '" /></div>'
       + '<div style="display:flex;gap:6px;flex-wrap:wrap" id="archive-cat-buttons">' + catsHTML + '</div>'
       + '</div>'
