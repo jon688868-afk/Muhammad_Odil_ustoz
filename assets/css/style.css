@@ -18,16 +18,16 @@
   --gold-600: #895120;
   --gold:     #e4b73a;
 
-  /* Green palette (brand: #0f563e / #199b68) */
-  --navy-900: #061a12;
-  --navy-800: #0a2a1c;
-  --navy-700: #0f3828;
-  --navy-600: #0f563e;
-  --navy-500: #167a52;
-  --navy:     #0f3828;
+  /* Teal palette (brand: #1a8a8a / #2bbcb3) */
+  --navy-900: #051e1e;
+  --navy-800: #0a3636;
+  --navy-700: #0e4f4f;
+  --navy-600: #1a8a8a;
+  --navy-500: #1f9e9e;
+  --navy:     #0e4f4f;
 
   /* Semantic status colors */
-  --color-success: #10b981;
+  --color-success: #2bbcb3;
   --color-warning: #f59e0b;
   --color-danger:  #ef4444;
   --color-info:    #3b82f6;
@@ -107,28 +107,28 @@
    DARK THEME
 --------------------------------------------------------- */
 [data-theme="dark"] {
-  --page-bg:        #0e3627;
-  --surface-1:      #154a35;
-  --surface-2:      #1a5840;
-  --surface-3:      #20654c;
-  --surface-hover:  #267256;
-  --surface-active: #2c7f60;
+  --page-bg:        #0d4a4a;
+  --surface-1:      #165c5c;
+  --surface-2:      #1b6b6b;
+  --surface-3:      #207a7a;
+  --surface-hover:  #268a8a;
+  --surface-active: #2c9999;
 
   /* WCAG AA-compliant text colors on dark backgrounds */
-  --text-1:   #f0fff8;
-  --text-2:   #b0dcc8;
-  --text-3:   #96ccb2;
-  --text-inv: #0e3627;
+  --text-1:   #f0ffff;
+  --text-2:   #b0dcd8;
+  --text-3:   #96ccc6;
+  --text-inv: #0d4a4a;
 
   --border-1: rgba(255,255,255,.10);
   --border-2: rgba(255,255,255,.14);
   --border-3: rgba(255,255,255,.18);
 
-  --sidebar-bg:    #0c3020;
+  --sidebar-bg:    #0b3e3e;
   --sidebar-item:  rgba(255,255,255,.07);
-  --topbar-bg:     rgba(14,54,39,.90);
+  --topbar-bg:     rgba(13,74,74,.90);
 
-  --glass-bg:      rgba(17,61,44,.75);
+  --glass-bg:      rgba(17,68,68,.75);
   --glass-border:  rgba(255,255,255,.07);
 
   --chip-bg:   rgba(228,183,58,.12);
@@ -147,16 +147,16 @@
   --surface-active: #dfe9e3;
 
   /* WCAG AA-compliant text colors on light backgrounds */
-  --text-1:   #0a2a1c;
-  --text-2:   #3d6652;
-  --text-3:   #567a6a;  /* Fixed: 4.5:1+ contrast on #ffffff */
+  --text-1:   #0a2a2a;
+  --text-2:   #3d6660;
+  --text-3:   #567a72;  /* Fixed: 4.5:1+ contrast on #ffffff */
   --text-inv: #ffffff;
 
   --border-1: rgba(0,0,0,.06);
   --border-2: rgba(0,0,0,.09);
   --border-3: rgba(0,0,0,.14);
 
-  --sidebar-bg:    #0f563e;
+  --sidebar-bg:    #1a8a8a;
   --sidebar-item:  rgba(255,255,255,.04);
   --topbar-bg:     rgba(240,245,242,.92);
 
