@@ -276,6 +276,24 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
     submitted_at TEXT,
     ip_address   TEXT
 );
+
+CREATE TABLE IF NOT EXISTS custom_sections (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug         TEXT NOT NULL UNIQUE,
+    label        TEXT NOT NULL,
+    icon         TEXT DEFAULT '',
+    fields       TEXT NOT NULL DEFAULT '[]',
+    sort_order   INTEGER DEFAULT 0,
+    created_at   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS custom_items (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    section_slug TEXT NOT NULL,
+    data         TEXT NOT NULL DEFAULT '{}',
+    sort_order   INTEGER DEFAULT 0,
+    FOREIGN KEY (section_slug) REFERENCES custom_sections(slug) ON DELETE CASCADE
+);
 """
 
 
@@ -727,6 +745,102 @@ def save_contact(name, email, subject, message, ip=None):
         )
         conn.commit()
         return cursor.lastrowid
+    except Exception:
+        conn.rollback()
+        raise
+
+
+# ---------------------------------------------------------------------------
+# Custom sections CRUD
+# ---------------------------------------------------------------------------
+
+def get_custom_sections():
+    """Return all custom section definitions."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM custom_sections ORDER BY sort_order ASC, id ASC"
+    ).fetchall()
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["fields"] = json.loads(d["fields"]) if d["fields"] else []
+        result.append(d)
+    return result
+
+
+def save_custom_section(section):
+    """Create or update a custom section definition.
+    Returns the section id."""
+    conn = get_connection()
+    fields_json = json.dumps(section.get("fields", []), ensure_ascii=False)
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+
+    try:
+        if section.get("id"):
+            conn.execute(
+                "UPDATE custom_sections SET label=?, icon=?, fields=?, sort_order=? WHERE id=?",
+                (section["label"], section.get("icon", ""), fields_json,
+                 section.get("sort_order", 0), section["id"]),
+            )
+            conn.commit()
+            return section["id"]
+        else:
+            cursor = conn.execute(
+                "INSERT INTO custom_sections (slug, label, icon, fields, sort_order, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (section["slug"], section["label"], section.get("icon", ""),
+                 fields_json, section.get("sort_order", 0), now),
+            )
+            conn.commit()
+            return cursor.lastrowid
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def delete_custom_section(section_id):
+    """Delete a custom section and all its items."""
+    conn = get_connection()
+    try:
+        row = conn.execute("SELECT slug FROM custom_sections WHERE id=?", (section_id,)).fetchone()
+        if row:
+            conn.execute("DELETE FROM custom_items WHERE section_slug=?", (row["slug"],))
+            conn.execute("DELETE FROM custom_sections WHERE id=?", (section_id,))
+            conn.commit()
+            return True
+        return False
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def get_custom_items(section_slug):
+    """Return all items for a custom section."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM custom_items WHERE section_slug=? ORDER BY sort_order ASC, id ASC",
+        (section_slug,),
+    ).fetchall()
+    result = []
+    for r in rows:
+        item = json.loads(r["data"]) if r["data"] else {}
+        item["id"] = r["id"]
+        result.append(item)
+    return result
+
+
+def save_custom_items(section_slug, items):
+    """Replace all items for a custom section."""
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM custom_items WHERE section_slug=?", (section_slug,))
+        for idx, item in enumerate(items):
+            item_data = {k: v for k, v in item.items() if k != "id"}
+            conn.execute(
+                "INSERT INTO custom_items (section_slug, data, sort_order) VALUES (?, ?, ?)",
+                (section_slug, json.dumps(item_data, ensure_ascii=False), idx),
+            )
+        conn.commit()
     except Exception:
         conn.rollback()
         raise

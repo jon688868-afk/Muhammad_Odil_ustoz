@@ -35,7 +35,7 @@ import database as db
 # ─── Configuration ─────────────────────────────────────────────────────────
 
 PORT = 8765
-HOST = '127.0.0.1'
+HOST = '0.0.0.0'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, 'assets', 'js', 'data.js')
 BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
@@ -463,6 +463,11 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
             # Public endpoint — serves all data for the frontend
             try:
                 data = db.get_all_data()
+                # Include custom sections for frontend
+                custom_sections = db.get_custom_sections()
+                data['_customSections'] = custom_sections
+                for cs in custom_sections:
+                    data['_custom_' + cs['slug']] = db.get_custom_items(cs['slug'])
                 self.send_json(200, data)
             except Exception:
                 self.send_json(500, {'error': 'Failed to load data'})
@@ -473,6 +478,10 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 return
             try:
                 data = db.get_all_data()
+                # Include custom sections
+                data['_customSections'] = db.get_custom_sections()
+                for cs in data['_customSections']:
+                    data['_custom_' + cs['slug']] = db.get_custom_items(cs['slug'])
                 self.send_json(200, data)
             except Exception:
                 self.send_json(500, {'error': 'Failed to load data'})
@@ -641,6 +650,13 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                     if section_name in payload:
                         db.save_section(section_name, payload[section_name])
 
+                # Save custom section items
+                for key in list(payload.keys()):
+                    if key.startswith('_custom_'):
+                        slug = key[8:]  # remove '_custom_' prefix
+                        if re.match(r'^[a-z0-9_]+$', slug):
+                            db.save_custom_items(slug, payload[key])
+
                 # Also update data.js for static fallback
                 full_data = db.get_all_data()
                 write_data_js(full_data)
@@ -695,6 +711,87 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(200, {'success': True, 'message': 'Message sent'})
             except Exception:
                 self.send_json(500, {'error': 'Failed to save message'})
+
+        # ── Custom Section Management ─────────────────────────────────
+        elif path == '/api/custom-sections':
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+
+            action = payload.get('action', 'create')
+
+            if action == 'create' or action == 'update':
+                slug = payload.get('slug', '').strip()
+                label = payload.get('label', '').strip()
+                fields = payload.get('fields', [])
+
+                if not label:
+                    self.send_json(400, {'error': 'Label is required'})
+                    return
+
+                if action == 'create' and not slug:
+                    slug = re.sub(r'[^a-z0-9]+', '_', label.lower()).strip('_')
+                    if not slug:
+                        self.send_json(400, {'error': 'Invalid label for slug'})
+                        return
+                    # Prevent collision with built-in sections
+                    reserved = set(db._SECTION_TO_TABLE.keys()) | {'i18n', 'config', 'audit', 'contact'}
+                    if slug in reserved:
+                        slug = slug + '_custom'
+
+                section_data = {
+                    'slug': slug,
+                    'label': label,
+                    'icon': payload.get('icon', ''),
+                    'fields': fields,
+                    'sort_order': payload.get('sort_order', 0),
+                }
+                if action == 'update' and payload.get('id'):
+                    section_data['id'] = payload['id']
+
+                try:
+                    sid = db.save_custom_section(section_data)
+                    db.log_audit('custom_section_' + action, details=label, ip=client_ip)
+                    self.send_json(200, {'success': True, 'id': sid, 'slug': slug})
+                except Exception:
+                    self.send_json(500, {'error': 'Failed to save section'})
+
+            elif action == 'delete':
+                sid = payload.get('id')
+                if not sid:
+                    self.send_json(400, {'error': 'Section ID required'})
+                    return
+                try:
+                    db.delete_custom_section(sid)
+                    db.log_audit('custom_section_delete', details=str(sid), ip=client_ip)
+                    self.send_json(200, {'success': True})
+                except Exception:
+                    self.send_json(500, {'error': 'Failed to delete section'})
+            else:
+                self.send_json(400, {'error': 'Unknown action'})
+
+        # ── Save Custom Section Items ─────────────────────────────────
+        elif path.startswith('/api/custom-items/'):
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+
+            slug = path.split('/api/custom-items/')[1]
+            if not slug or not re.match(r'^[a-z0-9_]+$', slug):
+                self.send_json(400, {'error': 'Invalid section slug'})
+                return
+
+            items = payload.get('items', [])
+            try:
+                db.save_custom_items(slug, items)
+                db.log_audit('custom_items_save', section=slug, ip=client_ip)
+                self.send_json(200, {'success': True})
+            except Exception:
+                self.send_json(500, {'error': 'Failed to save items'})
 
         # ── Logout ─────────────────────────────────────────────────────
         elif path == '/api/logout':

@@ -62,6 +62,7 @@
   let dragFromIdx = null;
   let dragSectionKey = null;
   let autoSaveTimeout = null;
+  let customSections = [];  // loaded from server
 
   // === SECTION SCHEMAS ===
   const SCHEMAS = {
@@ -275,6 +276,55 @@
 
   var SECTION_ORDER = ['news','researchAreas','events','publications','team','programs','videos','faq','blogPosts','testimonials','gallery'];
 
+  // === CUSTOM SECTION HELPERS ===
+  function loadCustomSections() {
+    customSections = currentData._customSections || [];
+    customSections.forEach(function(cs) {
+      var sKey = '_custom_' + cs.slug;
+      // Build dynamic schema
+      var fields = (cs.fields || []).map(function(f) {
+        var field = { key: f.key, type: f.type || 'text', label: f.label || f.key };
+        if (f.half) field.half = true;
+        if (f.required) field.required = true;
+        if (f.placeholder) field.placeholder = f.placeholder;
+        if (f.options) field.options = f.options;
+        if (f.dir) field.dir = f.dir;
+        return field;
+      });
+      // Add auto ID field
+      fields.unshift({ key: 'id', type: 'number', label: 'ID', auto: true, half: true });
+
+      SCHEMAS[sKey] = {
+        label: cs.label, icon: cs.icon ? '<span style="font-size:16px">' + esc(cs.icon) + '</span>' : I.empty, idKey: 'id',
+        _customId: cs.id, _customSlug: cs.slug,
+        display: function(i) {
+          var title = i.title || i.name || i.sarlavha || Object.values(i).find(function(v) { return typeof v === 'string' && v.length > 0 && v.length < 100; }) || '#' + (i.id || '?');
+          return { t: title, m: '' };
+        },
+        fields: fields,
+      };
+
+      // Add to section order if not already there
+      if (SECTION_ORDER.indexOf(sKey) === -1) {
+        SECTION_ORDER.push(sKey);
+      }
+
+      // Ensure data array exists
+      if (!currentData[sKey]) currentData[sKey] = [];
+    });
+  }
+
+  var FIELD_TYPES = [
+    { value: 'text', label: 'Matn (text)' },
+    { value: 'textarea', label: 'Katta matn (textarea)' },
+    { value: 'number', label: 'Raqam (number)' },
+    { value: 'select', label: 'Tanlov (select)' },
+    { value: 'checkbox', label: 'Belgi (checkbox)' },
+    { value: 'color', label: 'Rang (color)' },
+    { value: 'image', label: 'Rasm (image)' },
+    { value: 'tags', label: 'Teglar (tags)' },
+  ];
+
   // ───────────────────────────────────────────
   // INITIALIZATION
   // ───────────────────────────────────────────
@@ -314,6 +364,12 @@
         case 'admin-img-clear': handleImgClear(el.dataset.key); break;
         case 'admin-toggle': handleToggleClick(el); break;
         case 'admin-mobile-menu': toggleMobileSidebar(); break;
+        case 'admin-new-section': openNewSectionForm(); break;
+        case 'admin-edit-section': openEditSectionForm(el.dataset.slug); break;
+        case 'admin-delete-section': handleDeleteSection(el.dataset.slug); break;
+        case 'admin-section-save': handleSectionFormSave(); break;
+        case 'admin-section-add-field': handleSectionAddField(); break;
+        case 'admin-section-remove-field': handleSectionRemoveField(el); break;
       }
     });
 
@@ -498,6 +554,7 @@
   function showApp() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-app').style.display = 'flex';
+    loadCustomSections();
     renderSidebar();
     renderTopbar();
     nav('dashboard');
@@ -526,7 +583,7 @@
   // ───────────────────────────────────────────
   function renderSidebar() {
     var sb = document.getElementById('admin-sidebar');
-    var contentItems = SECTION_ORDER.map(function(key) {
+    var builtinItems = SECTION_ORDER.filter(function(k) { return !k.startsWith('_custom_'); }).map(function(key) {
       var s = SCHEMAS[key];
       var arr = currentData[key];
       var count = Array.isArray(arr) ? arr.length : 0;
@@ -536,6 +593,19 @@
         '<span class="nav-count">' + count + '</span>' +
       '</div>';
     }).join('');
+
+    var customItems = customSections.map(function(cs) {
+      var sKey = '_custom_' + cs.slug;
+      var arr = currentData[sKey];
+      var count = Array.isArray(arr) ? arr.length : 0;
+      return '<div class="admin-nav-item ' + (currentSection===sKey?'active':'') + '" data-action="admin-nav" data-section="' + sKey + '">' +
+        '<span class="nav-icon">' + (cs.icon ? '<span style="font-size:14px">' + esc(cs.icon) + '</span>' : I.empty) + '</span>' +
+        '<span>' + esc(cs.label) + '</span>' +
+        '<span class="nav-count">' + count + '</span>' +
+      '</div>';
+    }).join('');
+
+    var contentItems = builtinItems;
 
     sb.innerHTML =
       '<div class="admin-sidebar-logo">' +
@@ -556,6 +626,10 @@
         '</div>' +
         '<div class="admin-nav-label">Content</div>' +
         contentItems +
+        (customItems ? '<div class="admin-nav-label">Maxsus bo\'limlar</div>' + customItems : '') +
+        '<div class="admin-nav-item" data-action="admin-new-section" style="opacity:0.6">' +
+          '<span class="nav-icon">' + I.plus + '</span><span>Bo\'lim qo\'shish</span>' +
+        '</div>' +
         '<div class="admin-nav-label">System</div>' +
         '<div class="admin-nav-item ' + (currentSection==='settings'?'active':'') + '" data-action="admin-nav" data-section="settings">' +
           '<span class="nav-icon">' + I.settings + '</span><span>Settings</span>' +
@@ -606,6 +680,15 @@
         '<div class="admin-stat-label">' + esc(s.label.split('/')[0].trim()) + '</div>' +
       '</div>';
     }).join('');
+    var customStats = customSections.map(function(cs) {
+      var sKey = '_custom_' + cs.slug;
+      var c = (currentData[sKey] || []).length;
+      return '<div class="admin-stat-card" data-action="admin-nav" data-section="' + sKey + '">' +
+        '<div class="admin-stat-count">' + c + '</div>' +
+        '<div class="admin-stat-label">' + esc(cs.label) + '</div>' +
+      '</div>';
+    }).join('');
+
     var i18nC = Object.keys((currentData.i18n && currentData.i18n.uz) || {}).length;
     el.innerHTML =
       '<div class="admin-dashboard-header">' +
@@ -618,6 +701,7 @@
           '<div class="admin-stat-label">Tarjima kalitlari</div>' +
         '</div>' +
         stats +
+        customStats +
       '</div>';
   }
 
@@ -680,13 +764,23 @@
 
     var emptyHtml = '<div class="admin-empty"><div class="admin-empty-icon">' + I.empty + '</div><div class="admin-empty-text">Hali yozuvlar yo\'q</div></div>';
 
+    var sectionActions = '<button class="admin-add-btn" data-action="admin-add" data-key="' + key + '">' + I.plus + ' Yangi qo\'shish</button>';
+    if (schema._customSlug) {
+      sectionActions =
+        '<div style="display:flex;gap:6px;align-items:center">' +
+          '<button class="admin-add-btn" data-action="admin-add" data-key="' + key + '">' + I.plus + ' Yangi qo\'shish</button>' +
+          '<button class="admin-action-btn" data-action="admin-edit-section" data-slug="' + schema._customSlug + '" title="Bo\'limni tahrirlash">' + I.settings + '</button>' +
+          '<button class="admin-action-btn danger" data-action="admin-delete-section" data-slug="' + schema._customSlug + '" title="Bo\'limni o\'chirish">' + I.trash + '</button>' +
+        '</div>';
+    }
+
     el.innerHTML =
       '<div class="admin-section-header">' +
         '<div class="admin-section-title">' +
           esc(schema.label) +
           ' <span class="admin-section-count">' + items.length + '</span>' +
         '</div>' +
-        '<button class="admin-add-btn" data-action="admin-add" data-key="' + key + '">' + I.plus + ' Yangi qo\'shish</button>' +
+        sectionActions +
       '</div>' +
       '<div class="admin-search-bar">' +
         '<span class="search-icon">' + I.search + '</span>' +
@@ -987,6 +1081,167 @@
     markUnsaved();
     renderI18n(document.getElementById('admin-content'));
     toast('Tarjima kaliti qo\'shildi', 'success');
+  }
+
+  // ───────────────────────────────────────────
+  // CUSTOM SECTION BUILDER
+  // ───────────────────────────────────────────
+  function openNewSectionForm() {
+    renderSectionBuilder(null);
+  }
+
+  function openEditSectionForm(slug) {
+    var cs = customSections.find(function(s) { return s.slug === slug; });
+    if (!cs) return;
+    renderSectionBuilder(cs);
+  }
+
+  function renderSectionBuilder(existing) {
+    var isEdit = !!existing;
+    var label = existing ? existing.label : '';
+    var icon = existing ? (existing.icon || '') : '';
+    var fields = existing ? (existing.fields || []) : [];
+
+    var fieldsHtml = fields.map(function(f, idx) {
+      return buildFieldRow(f, idx);
+    }).join('');
+
+    var mc = document.getElementById('admin-modal-content');
+    mc.innerHTML =
+      '<div class="admin-form">' +
+        '<h2>' + (isEdit ? 'Bo\'limni tahrirlash' : 'Yangi bo\'lim yaratish') + '</h2>' +
+        '<div class="admin-form-grid">' +
+          '<div class="admin-form-group">' +
+            '<label class="admin-form-label">Bo\'lim nomi <span class="req">*</span></label>' +
+            '<input type="text" class="admin-form-input" id="cs-label" value="' + esc(label) + '" placeholder="Masalan: Kutubxona" />' +
+          '</div>' +
+          '<div class="admin-form-group">' +
+            '<label class="admin-form-label">Icon (emoji)</label>' +
+            '<input type="text" class="admin-form-input" id="cs-icon" value="' + esc(icon) + '" placeholder="Masalan: &#128218;" />' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin:16px 0 8px;font-weight:600;font-size:13px">Maydonlar</div>' +
+        '<div id="cs-fields-list">' + fieldsHtml + '</div>' +
+        '<button class="admin-btn admin-btn-ghost" data-action="admin-section-add-field" style="margin:8px 0 16px">' + I.plus + ' Maydon qo\'shish</button>' +
+        '<div class="admin-form-actions">' +
+          '<button class="admin-btn admin-btn-ghost" data-action="admin-modal-close" data-modal="admin-modal">Bekor qilish</button>' +
+          '<button class="admin-btn admin-btn-primary" data-action="admin-section-save" data-edit-id="' + (existing ? existing.id : '') + '" data-edit-slug="' + (existing ? existing.slug : '') + '">' +
+            (isEdit ? 'Saqlash' : 'Yaratish') +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    openAdminModal('admin-modal');
+  }
+
+  function buildFieldRow(f, idx) {
+    var typeOpts = FIELD_TYPES.map(function(ft) {
+      return '<option value="' + ft.value + '" ' + (f.type === ft.value ? 'selected' : '') + '>' + ft.label + '</option>';
+    }).join('');
+
+    return '<div class="cs-field-row" data-fidx="' + idx + '" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;padding:8px;background:var(--bg-2);border-radius:6px">' +
+      '<input type="text" class="admin-form-input cs-field-key" value="' + esc(f.key || '') + '" placeholder="Kalit (slug)" style="flex:1;min-width:0" />' +
+      '<input type="text" class="admin-form-input cs-field-label" value="' + esc(f.label || '') + '" placeholder="Nomi" style="flex:1.5;min-width:0" />' +
+      '<select class="admin-form-input cs-field-type" style="flex:1;min-width:0">' + typeOpts + '</select>' +
+      '<label style="display:flex;align-items:center;gap:3px;font-size:11px;white-space:nowrap"><input type="checkbox" class="cs-field-required" ' + (f.required ? 'checked' : '') + ' /> Shart</label>' +
+      '<label style="display:flex;align-items:center;gap:3px;font-size:11px;white-space:nowrap"><input type="checkbox" class="cs-field-half" ' + (f.half ? 'checked' : '') + ' /> Yarim</label>' +
+      '<button class="admin-action-btn danger" data-action="admin-section-remove-field" title="O\'chirish" style="flex-shrink:0">' + I.trash + '</button>' +
+    '</div>';
+  }
+
+  function handleSectionAddField() {
+    var list = document.getElementById('cs-fields-list');
+    var idx = list.children.length;
+    var div = document.createElement('div');
+    div.innerHTML = buildFieldRow({ key: '', label: '', type: 'text' }, idx);
+    list.appendChild(div.firstElementChild);
+  }
+
+  function handleSectionRemoveField(el) {
+    var row = el.closest('.cs-field-row');
+    if (row) row.remove();
+  }
+
+  async function handleSectionFormSave() {
+    var label = document.getElementById('cs-label').value.trim();
+    var icon = document.getElementById('cs-icon').value.trim();
+    var saveBtn = document.querySelector('[data-action="admin-section-save"]');
+    var editId = saveBtn.dataset.editId ? parseInt(saveBtn.dataset.editId) : null;
+    var editSlug = saveBtn.dataset.editSlug || '';
+
+    if (!label) { toast('Bo\'lim nomini kiriting', 'error'); return; }
+
+    var fields = [];
+    document.querySelectorAll('#cs-fields-list .cs-field-row').forEach(function(row) {
+      var key = row.querySelector('.cs-field-key').value.trim();
+      var flabel = row.querySelector('.cs-field-label').value.trim();
+      var type = row.querySelector('.cs-field-type').value;
+      var required = row.querySelector('.cs-field-required').checked;
+      var half = row.querySelector('.cs-field-half').checked;
+      if (key) {
+        var f = { key: key, label: flabel || key, type: type };
+        if (required) f.required = true;
+        if (half) f.half = true;
+        fields.push(f);
+      }
+    });
+
+    if (fields.length === 0) { toast('Kamida bitta maydon qo\'shing', 'error'); return; }
+
+    var payload = {
+      action: editId ? 'update' : 'create',
+      label: label,
+      icon: icon,
+      fields: fields,
+    };
+    if (editId) { payload.id = editId; payload.slug = editSlug; }
+
+    try {
+      var r = await api('POST', '/api/custom-sections', payload);
+      if (r.success) {
+        // Reload all data to get fresh custom sections
+        var data = await api('GET', '/api/data');
+        if (data && !data.error) {
+          currentData = data;
+          // Rebuild custom section schemas
+          customSections.forEach(function(cs) {
+            var sKey = '_custom_' + cs.slug;
+            delete SCHEMAS[sKey];
+            var idx = SECTION_ORDER.indexOf(sKey);
+            if (idx !== -1) SECTION_ORDER.splice(idx, 1);
+          });
+          loadCustomSections();
+        }
+        closeAdminModal('admin-modal');
+        renderSidebar();
+        toast(editId ? 'Bo\'lim yangilandi' : 'Yangi bo\'lim yaratildi!', 'success');
+        if (r.slug) nav('_custom_' + r.slug);
+      } else {
+        toast(r.error || 'Xatolik', 'error');
+      }
+    } catch (e) {
+      toast('Server xatosi', 'error');
+    }
+  }
+
+  function handleDeleteSection(slug) {
+    var cs = customSections.find(function(s) { return s.slug === slug; });
+    if (!cs) return;
+    showConfirm('Bo\'lim o\'chirilsinmi?', '"' + esc(cs.label) + '" va undagi barcha ma\'lumotlar butunlay o\'chiriladi.', async function() {
+      try {
+        var r = await api('POST', '/api/custom-sections', { action: 'delete', id: cs.id });
+        if (r.success) {
+          var sKey = '_custom_' + slug;
+          delete SCHEMAS[sKey];
+          delete currentData[sKey];
+          var idx = SECTION_ORDER.indexOf(sKey);
+          if (idx !== -1) SECTION_ORDER.splice(idx, 1);
+          customSections = customSections.filter(function(s) { return s.slug !== slug; });
+          renderSidebar();
+          nav('dashboard');
+          toast('Bo\'lim o\'chirildi', 'info');
+        } else { toast(r.error || 'Xatolik', 'error'); }
+      } catch (e) { toast('Server xatosi', 'error'); }
+    });
   }
 
   // ───────────────────────────────────────────
