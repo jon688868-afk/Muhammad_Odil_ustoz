@@ -19,12 +19,12 @@
   --gold:     #e4b73a;
 
   /* Turquoise palette (brand: #01CED1) */
-  --navy-900: #042222;
-  --navy-800: #083838;
-  --navy-700: #0c4e4e;
-  --navy-600: #01a5a8;
+  --navy-900: #018080;
+  --navy-800: #019090;
+  --navy-700: #01a5a8;
+  --navy-600: #01b8bb;
   --navy-500: #01CED1;
-  --navy:     #0c4e4e;
+  --navy:     #01a5a8;
 
   /* Semantic status colors */
   --color-success: #01CED1;
