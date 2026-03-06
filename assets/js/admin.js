@@ -879,7 +879,7 @@
       if (f.type === 'color') {
         return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + '</label>' +
           '<div class="admin-color-group">' +
-            '<input type="color" value="' + (val||'#061e1e') + '" />' +
+            '<input type="color" value="' + (val||'#019395') + '" />' +
             '<input type="text" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" />' +
           '</div></div>';
       }

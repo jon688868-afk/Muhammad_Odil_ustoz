@@ -107,31 +107,31 @@
    DARK THEME
 --------------------------------------------------------- */
 [data-theme="dark"] {
-  --page-bg:        #061e1e;
-  --surface-1:      #0c3232;
-  --surface-2:      #104040;
-  --surface-3:      #144e4e;
-  --surface-hover:  #185c5c;
-  --surface-active: #1e6c6c;
+  --page-bg:        #019395;
+  --surface-1:      #01a5a8;
+  --surface-2:      #01b5b8;
+  --surface-3:      #01c0c3;
+  --surface-hover:  #01cacD;
+  --surface-active: #20d5d8;
 
   /* WCAG AA-compliant text colors on dark backgrounds */
-  --text-1:   #eaffff;
-  --text-2:   #9ed8d6;
-  --text-3:   #80c4c2;
-  --text-inv: #061e1e;
+  --text-1:   #ffffff;
+  --text-2:   #d0f5f4;
+  --text-3:   #b0eae8;
+  --text-inv: #019395;
 
-  --border-1: rgba(1,206,209,.10);
-  --border-2: rgba(1,206,209,.16);
-  --border-3: rgba(1,206,209,.22);
+  --border-1: rgba(255,255,255,.15);
+  --border-2: rgba(255,255,255,.22);
+  --border-3: rgba(255,255,255,.30);
 
-  --sidebar-bg:    #041818;
-  --sidebar-item:  rgba(1,206,209,.08);
-  --topbar-bg:     rgba(6,30,30,.92);
+  --sidebar-bg:    #018285;
+  --sidebar-item:  rgba(255,255,255,.10);
+  --topbar-bg:     rgba(1,147,149,.92);
 
-  --glass-bg:      rgba(8,40,40,.80);
-  --glass-border:  rgba(1,206,209,.10);
+  --glass-bg:      rgba(1,160,165,.80);
+  --glass-border:  rgba(255,255,255,.15);
 
-  --chip-bg:   rgba(228,183,58,.12);
+  --chip-bg:   rgba(228,183,58,.15);
   --chip-text: #e4b73a;
 }
 
