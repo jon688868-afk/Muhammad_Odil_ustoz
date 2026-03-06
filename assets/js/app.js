@@ -475,7 +475,7 @@
     }).join('');
 
     var newsHTML = news.slice(0, 6).map(function (n) {
-      var thumbStyle = n.image ? '' : 'background:linear-gradient(135deg,' + n.color + ',#0d4a4a)';
+      var thumbStyle = n.image ? '' : 'background:linear-gradient(135deg,' + n.color + ',#0a2e2e)';
       var thumbContent = n.image
         ? '<img src="' + escAttr(n.image) + '" alt="" style="width:100%;height:100%;object-fit:cover" />'
         : '<span style="position:relative;z-index:1">' + n.icon + '</span>';
@@ -1121,7 +1121,7 @@
       + pubs.map(function (p) {
           var title = isEn ? p.title_en : p.title;
           var saved = readingList.indexOf(p.id) !== -1;
-          var spineStyle = p.coverImage ? 'padding:0;overflow:hidden' : 'background:linear-gradient(135deg,' + p.color + ',#0d4a4a)';
+          var spineStyle = p.coverImage ? 'padding:0;overflow:hidden' : 'background:linear-gradient(135deg,' + p.color + ',#0a2e2e)';
           var spineContent = p.coverImage
             ? '<img src="' + escAttr(p.coverImage) + '" alt="" style="width:100%;height:100%;object-fit:cover" />'
             : '<span>' + esc(p.abbr) + '</span>';
@@ -1218,7 +1218,7 @@
       var coverContent = g.coverImage
         ? '<img src="' + escAttr(g.coverImage) + '" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />'
         : '<span style="font-size:48px;opacity:0.8;position:relative;z-index:1">' + g.icon + '</span>';
-      var bgStyle = g.coverImage ? '' : 'background:linear-gradient(135deg,' + g.color + ',#0d4a4a);';
+      var bgStyle = g.coverImage ? '' : 'background:linear-gradient(135deg,' + g.color + ',#0a2e2e);';
       return '<div class="card card-hover gallery-card" data-cat="' + escAttr(g.category) + '" style="cursor:pointer;overflow:hidden;padding:0" data-action="open-gallery" data-id="' + g.id + '">'
         + '<div style="height:160px;' + bgStyle + 'display:flex;align-items:center;justify-content:center;position:relative">'
         + coverContent
@@ -1269,7 +1269,7 @@
     }).join('');
 
     var itemsHTML = allNews.map(function (n) {
-      var thumbStyle = n.image ? 'overflow:hidden' : 'background:linear-gradient(135deg,' + n.color + ',#0d4a4a)';
+      var thumbStyle = n.image ? 'overflow:hidden' : 'background:linear-gradient(135deg,' + n.color + ',#0a2e2e)';
       var thumbContent = n.image
         ? '<img src="' + escAttr(n.image) + '" alt="" style="width:100%;height:100%;object-fit:cover" />'
         : n.icon;
@@ -1459,7 +1459,7 @@
 
     document.getElementById('modal-content').innerHTML =
       '<div style="display:flex;gap:20px;margin-bottom:20px;align-items:flex-start">'
-      + '<div style="width:90px;height:120px;background:linear-gradient(135deg,' + p.color + ',#0d4a4a);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:3px 4px 14px rgba(0,0,0,.3)">'
+      + '<div style="width:90px;height:120px;background:linear-gradient(135deg,' + p.color + ',#0a2e2e);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:3px 4px 14px rgba(0,0,0,.3)">'
       + '<span style="font-size:13px;font-weight:800;color:var(--gold-300);text-align:center;padding:6px;line-height:1.2">' + esc(p.abbr) + '</span>'
       + '</div><div>'
       + '<h2 style="font-size:17px;font-weight:700;color:var(--text-1);line-height:1.4;margin-bottom:8px">' + esc(isEn ? p.title_en : p.title) + '</h2>'
@@ -1475,7 +1475,7 @@
       + tagsHTML
       + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
       + '<button class="btn btn-gold" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="">' + _i(IC.download) + ' ' + esc(isEn ? 'Download PDF' : 'PDF yuklab olish') + '</button>'
-      + '<button class="btn btn-ghost" style="' + (saved ? 'border-color:#2bbcb3;color:#2bbcb3' : '') + '" data-action="save-reading" data-id="' + p.id + '">' + _i(IC.bookmark) + ' ' + esc(saved ? (isEn ? 'Saved' : 'Saqlangan') : (isEn ? 'Save' : 'Saqlash')) + '</button>'
+      + '<button class="btn btn-ghost" style="' + (saved ? 'border-color:#2EC4B6;color:#2EC4B6' : '') + '" data-action="save-reading" data-id="' + p.id + '">' + _i(IC.bookmark) + ' ' + esc(saved ? (isEn ? 'Saved' : 'Saqlangan') : (isEn ? 'Save' : 'Saqlash')) + '</button>'
       + '</div>';
     openModal('news-modal');
   }
@@ -1667,7 +1667,7 @@
     var coverContent = g.coverImage
       ? '<img src="' + escAttr(g.coverImage) + '" alt="" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" />'
       : '<span style="font-size:72px;opacity:0.8;position:relative;z-index:1">' + g.icon + '</span>';
-    var bgStyle = g.coverImage ? '' : 'background:linear-gradient(135deg,' + g.color + ',#0d4a4a);';
+    var bgStyle = g.coverImage ? '' : 'background:linear-gradient(135deg,' + g.color + ',#0a2e2e);';
 
     document.getElementById('modal-content').innerHTML =
       '<div style="height:200px;' + bgStyle + 'border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;position:relative;overflow:hidden">'
@@ -1767,7 +1767,7 @@
     } else {
       bodyHTML = saved.map(function (p) {
         return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-1);align-items:center">'
-          + '<div style="width:40px;height:54px;background:linear-gradient(135deg,' + p.color + ',#0d4a4a);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 8px rgba(0,0,0,.2)">'
+          + '<div style="width:40px;height:54px;background:linear-gradient(135deg,' + p.color + ',#0a2e2e);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:2px 2px 8px rgba(0,0,0,.2)">'
           + '<span style="font-size:10px;font-weight:800;color:var(--gold-300)">' + esc(p.abbr) + '</span>'
           + '</div>'
           + '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-1)">' + esc(isEn ? p.title_en : p.title) + '</div>'
