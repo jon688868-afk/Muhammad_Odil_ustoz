@@ -370,6 +370,7 @@
         case 'admin-section-save': handleSectionFormSave(); break;
         case 'admin-section-add-field': handleSectionAddField(); break;
         case 'admin-section-remove-field': handleSectionRemoveField(el); break;
+        case 'admin-save-color': handleSaveColor(); break;
       }
     });
 
@@ -571,7 +572,7 @@
     var el = document.getElementById('admin-content');
     if (section === 'dashboard') renderDashboard(el);
     else if (section === 'i18n') renderI18n(el);
-    else if (section === 'settings') renderSettings(el);
+    else if (section === 'settings') { renderSettings(el); initColorPicker(); }
     else if (section === 'activity') renderActivity(el);
     else renderSection(el, section);
     window.scrollTo(0, 0);
@@ -1280,6 +1281,19 @@
           '<button class="admin-btn admin-btn-ghost" data-action="admin-backup">Zaxira yaratish</button>' +
         '</div>' +
         '<div class="settings-card">' +
+          '<h3>Sayt rangi</h3>' +
+          '<p>Sayt brend rangini o\'zgartiring</p>' +
+          '<div class="color-settings">' +
+            '<div class="color-picker-row">' +
+              '<input type="color" id="brand-color-picker" value="#01CED1" class="color-input" />' +
+              '<input type="text" id="brand-color-hex" value="#01CED1" class="admin-form-input color-hex-input" maxlength="7" placeholder="#01CED1" />' +
+            '</div>' +
+            '<div id="color-preview-box" class="color-preview-box" style="background:#01CED1"></div>' +
+          '</div>' +
+          '<button class="admin-btn admin-btn-primary" data-action="admin-save-color">Rangni saqlash</button>' +
+          '<div id="color-status" class="settings-error"></div>' +
+        '</div>' +
+        '<div class="settings-card">' +
           '<h3>Haqida</h3>' +
           '<p>IBXI Admin Panel v2.0 (Xavfsiz)</p>' +
           '<div style="font-size:11px;color:var(--text-3);line-height:2">' +
@@ -1319,6 +1333,56 @@
       var r = await api('POST', '/api/backup');
       if (r.success) toast('Zaxira yaratildi: ' + r.filename, 'success');
     } catch (e) { toast('Zaxira yaratish xatosi', 'error'); }
+  }
+
+  // ───────────────────────────────────────────
+  // COLOR SETTINGS
+  // ───────────────────────────────────────────
+  function initColorPicker() {
+    var picker = document.getElementById('brand-color-picker');
+    var hex = document.getElementById('brand-color-hex');
+    var preview = document.getElementById('color-preview-box');
+    if (!picker) return;
+    // load current color
+    fetch('/api/site-config').then(function(r){return r.json()}).then(function(cfg){
+      if (cfg.brand_color) {
+        picker.value = cfg.brand_color;
+        hex.value = cfg.brand_color;
+        preview.style.background = cfg.brand_color;
+      }
+    }).catch(function(){});
+    picker.addEventListener('input', function() {
+      hex.value = picker.value;
+      preview.style.background = picker.value;
+    });
+    hex.addEventListener('input', function() {
+      var v = hex.value.trim();
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+        picker.value = v;
+        preview.style.background = v;
+      }
+    });
+  }
+
+  async function handleSaveColor() {
+    var hex = document.getElementById('brand-color-hex');
+    var status = document.getElementById('color-status');
+    var color = (hex ? hex.value : '').trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) {
+      if (status) status.textContent = 'Noto\'g\'ri rang formati (#RRGGBB)';
+      return;
+    }
+    try {
+      var r = await api('POST', '/api/site-config', { key: 'brand_color', value: color });
+      if (r.success) {
+        toast('Brend rangi saqlandi', 'success');
+        if (status) status.textContent = '';
+      } else {
+        if (status) status.textContent = r.error || 'Xatolik';
+      }
+    } catch(e) {
+      if (status) status.textContent = 'Ulanish xatosi';
+    }
   }
 
   // ───────────────────────────────────────────

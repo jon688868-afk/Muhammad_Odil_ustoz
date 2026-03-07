@@ -751,6 +751,32 @@ def save_contact(name, email, subject, message, ip=None):
 
 
 # ---------------------------------------------------------------------------
+# Site config (key-value)
+# ---------------------------------------------------------------------------
+
+def get_site_config():
+    """Return all config as {key: value, ...}."""
+    conn = get_connection()
+    rows = conn.execute("SELECT key, value FROM config").fetchall()
+    return {r["key"]: r["value"] for r in rows}
+
+
+def save_site_config(key, value):
+    """Upsert a config key-value pair."""
+    conn = get_connection()
+    try:
+        conn.execute(
+            "INSERT INTO config (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+# ---------------------------------------------------------------------------
 # Custom sections CRUD
 # ---------------------------------------------------------------------------
 

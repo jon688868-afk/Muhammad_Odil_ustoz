@@ -2,4 +2,9 @@
 __pycache__/
 backups/
 ibxi.db
+ibxi.db-shm
+ibxi.db-wal
 *.pyc
+admin_config.json
+*.jpg
+!assets/**/*.jpg

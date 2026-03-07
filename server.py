@@ -21,6 +21,7 @@ import json
 import os
 import re
 import hashlib
+import hmac
 import secrets
 import shutil
 import time
@@ -30,12 +31,20 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 
+import logging
+
 import database as db
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='  [%(levelname)s] %(asctime)s — %(message)s',
+    datefmt='%H:%M:%S',
+)
 
 # ─── Configuration ─────────────────────────────────────────────────────────
 
 PORT = 8765
-HOST = '0.0.0.0'
+HOST = '127.0.0.1'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, 'assets', 'js', 'data.js')
 BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
@@ -86,13 +95,13 @@ def verify_password(password, stored_hash):
     if ':' not in stored_hash:
         # Legacy SHA256 format — verify and signal migration needed
         legacy_hash = hashlib.sha256(password.encode()).hexdigest()
-        return legacy_hash == stored_hash
+        return hmac.compare_digest(legacy_hash, stored_hash)
     salt_hex, key_hex = stored_hash.split(':', 1)
     salt = bytes.fromhex(salt_hex)
     key = hashlib.pbkdf2_hmac(
         'sha256', password.encode('utf-8'), salt, PBKDF2_ITERATIONS
     )
-    return key.hex() == key_hex
+    return hmac.compare_digest(key.hex(), key_hex)
 
 
 def load_password_hash():
@@ -232,10 +241,14 @@ def validate_file_magic(data, claimed_ext):
     if claimed_ext == '.webp' and data[:4] == b'RIFF' and data[8:12] == b'WEBP':
         return True
 
-    # SVG check (XML-based)
+    # SVG check (XML-based) — block if it contains script/event handlers
     if claimed_ext == '.svg':
         text_start = data[:500].decode('utf-8', errors='ignore').strip().lower()
         if '<svg' in text_start or '<?xml' in text_start:
+            full_text = data.decode('utf-8', errors='ignore').lower()
+            # Block SVGs with embedded scripts or event handlers
+            if re.search(r'<script|on\w+\s*=|javascript:', full_text):
+                return False
             return True
 
     return False
@@ -378,8 +391,11 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
 
     def log_message(self, fmt, *args):
-        path = args[0].split()[1] if args else ''
-        if '/api/' in str(path):
+        try:
+            path = str(args[0]).split()[1] if args and isinstance(args[0], str) else ''
+        except (IndexError, AttributeError):
+            path = ''
+        if '/api/' in path:
             super().log_message(fmt, *args)
 
     def end_headers(self):
@@ -395,14 +411,15 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: blob:; "
             "script-src 'self' 'unsafe-inline'; "
-            "connect-src 'self'")
+            "connect-src 'self' https://bukhariinstitute.com")
         super().end_headers()
 
     def get_client_ip(self):
-        """Get client IP address."""
-        forwarded = self.headers.get('X-Forwarded-For', '')
-        if forwarded:
-            return forwarded.split(',')[0].strip()
+        """Get client IP address (only trust X-Forwarded-For from localhost proxy)."""
+        if self.client_address[0] in ('127.0.0.1', '::1'):
+            forwarded = self.headers.get('X-Forwarded-For', '')
+            if forwarded:
+                return forwarded.split(',')[0].strip()
         return self.client_address[0]
 
     def send_json(self, status, data):
@@ -459,6 +476,13 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
         if path == '/api/health':
             self.send_json(200, {'status': 'ok', 'version': '2.0'})
 
+        elif path == '/api/site-config':
+            try:
+                self.send_json(200, db.get_site_config())
+            except Exception:
+                logging.exception('Failed to load config')
+                self.send_json(500, {'error': 'Failed to load config'})
+
         elif path == '/api/public-data':
             # Public endpoint — serves all data for the frontend
             try:
@@ -470,6 +494,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                     data['_custom_' + cs['slug']] = db.get_custom_items(cs['slug'])
                 self.send_json(200, data)
             except Exception:
+                logging.exception('Failed to load public data')
                 self.send_json(500, {'error': 'Failed to load data'})
 
         elif path == '/api/data':
@@ -484,6 +509,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                     data['_custom_' + cs['slug']] = db.get_custom_items(cs['slug'])
                 self.send_json(200, data)
             except Exception:
+                logging.exception('Failed to load admin data')
                 self.send_json(500, {'error': 'Failed to load data'})
 
         elif path == '/api/audit':
@@ -498,9 +524,15 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 items = [dict(r) for r in rows]
                 self.send_json(200, {'items': items})
             except Exception:
+                logging.exception('Failed to load audit log')
                 self.send_json(500, {'error': 'Failed to load audit log'})
 
         else:
+            # Block access to sensitive files
+            _, ext = os.path.splitext(path)
+            if ext.lower() in ('.py', '.db', '.db-shm', '.db-wal', '.json', '.env', '.git'):
+                self.send_json(403, {'error': 'Forbidden'})
+                return
             super().do_GET()
 
     # ─── POST Routes ───────────────────────────────────────────────────
@@ -561,6 +593,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(200, {'success': True, 'path': rel_path})
 
             except Exception:
+                logging.exception('Upload failed')
                 self.send_json(500, {'error': 'Upload failed'})
             return
 
@@ -668,6 +701,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                     'backup': backup_name,
                 })
             except Exception:
+                logging.exception('Failed to save data')
                 self.send_json(500, {'error': 'Failed to save data'})
 
         # ── Create Backup ──────────────────────────────────────────────
@@ -683,6 +717,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 db.log_audit('backup_created', details=filename, ip=client_ip)
                 self.send_json(200, {'success': True, 'filename': filename})
             except Exception:
+                logging.exception('Backup failed')
                 self.send_json(500, {'error': 'Backup failed'})
 
         # ── Contact Form ───────────────────────────────────────────────
@@ -710,7 +745,34 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 db.save_contact(name, email, subject, message, client_ip)
                 self.send_json(200, {'success': True, 'message': 'Message sent'})
             except Exception:
+                logging.exception('Failed to save contact message')
                 self.send_json(500, {'error': 'Failed to save message'})
+
+        # ── Site Config ────────────────────────────────────────────
+        elif path == '/api/site-config':
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+
+            key = payload.get('key', '').strip()
+            value = payload.get('value', '').strip()
+            if not key:
+                self.send_json(400, {'error': 'Key is required'})
+                return
+            # Only allow safe config keys
+            allowed_keys = {'brand_color'}
+            if key not in allowed_keys:
+                self.send_json(400, {'error': 'Invalid config key'})
+                return
+            try:
+                db.save_site_config(key, value)
+                db.log_audit('config_update', details=f'{key}={value}', ip=client_ip)
+                self.send_json(200, {'success': True})
+            except Exception:
+                logging.exception('Failed to save config')
+                self.send_json(500, {'error': 'Failed to save config'})
 
         # ── Custom Section Management ─────────────────────────────────
         elif path == '/api/custom-sections':
@@ -756,6 +818,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                     db.log_audit('custom_section_' + action, details=label, ip=client_ip)
                     self.send_json(200, {'success': True, 'id': sid, 'slug': slug})
                 except Exception:
+                    logging.exception('Failed to save custom section')
                     self.send_json(500, {'error': 'Failed to save section'})
 
             elif action == 'delete':
@@ -768,6 +831,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                     db.log_audit('custom_section_delete', details=str(sid), ip=client_ip)
                     self.send_json(200, {'success': True})
                 except Exception:
+                    logging.exception('Failed to delete custom section')
                     self.send_json(500, {'error': 'Failed to delete section'})
             else:
                 self.send_json(400, {'error': 'Unknown action'})
@@ -791,6 +855,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 db.log_audit('custom_items_save', section=slug, ip=client_ip)
                 self.send_json(200, {'success': True})
             except Exception:
+                logging.exception('Failed to save custom items')
                 self.send_json(500, {'error': 'Failed to save items'})
 
         # ── Logout ─────────────────────────────────────────────────────

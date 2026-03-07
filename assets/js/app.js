@@ -172,10 +172,98 @@
   }
 
   // ============================================
-  // THEME
+  // THEME & BRAND COLOR
   // ============================================
+  function hexToHSL(hex) {
+    hex = hex.replace('#', '');
+    var r = parseInt(hex.substring(0,2),16)/255;
+    var g = parseInt(hex.substring(2,4),16)/255;
+    var b = parseInt(hex.substring(4,6),16)/255;
+    var max = Math.max(r,g,b), min = Math.min(r,g,b);
+    var h, s, l = (max+min)/2;
+    if (max === min) { h = s = 0; }
+    else {
+      var d = max - min;
+      s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+      if (max === r) h = ((g-b)/d + (g<b?6:0))/6;
+      else if (max === g) h = ((b-r)/d+2)/6;
+      else h = ((r-g)/d+4)/6;
+    }
+    return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+  }
+
+  function hslToHex(h,s,l) {
+    s/=100; l/=100;
+    var c=(1-Math.abs(2*l-1))*s, x=c*(1-Math.abs((h/60)%2-1)), m=l-c/2;
+    var r=0,g=0,b=0;
+    if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}
+    else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x}
+    r=Math.round((r+m)*255);g=Math.round((g+m)*255);b=Math.round((b+m)*255);
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+  }
+
+  function generateColorPalette(brand) {
+    var hsl = hexToHSL(brand);
+    var h = hsl.h, s = hsl.s;
+    return {
+      '--navy-900': hslToHex(h, s, 25),
+      '--navy-800': hslToHex(h, s, 28),
+      '--navy-700': hslToHex(h, s, 32),
+      '--navy-600': hslToHex(h, s, 37),
+      '--navy-500': brand,
+      '--navy':     hslToHex(h, s, 32),
+      '--color-success': brand,
+      '--page-bg-dark':       hslToHex(h, s, 29),
+      '--surface-1-dark':     hslToHex(h, s, 32),
+      '--surface-2-dark':     hslToHex(h, s, 35),
+      '--surface-3-dark':     hslToHex(h, s, 38),
+      '--surface-hover-dark': hslToHex(h, s, 40),
+      '--surface-active-dark':hslToHex(h, s, 42),
+      '--sidebar-bg-dark':    hslToHex(h, s, 26),
+      '--topbar-bg-dark':     hslToHex(h, Math.min(s,90), 29),
+      '--sidebar-bg-light':   hslToHex(h, s, 32),
+    };
+  }
+
+  function applySiteColors() {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/api/site-config', true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var cfg = JSON.parse(xhr.responseText);
+          if (cfg.brand_color) {
+            var palette = generateColorPalette(cfg.brand_color);
+            var root = document.documentElement;
+            root.style.setProperty('--navy-900', palette['--navy-900']);
+            root.style.setProperty('--navy-800', palette['--navy-800']);
+            root.style.setProperty('--navy-700', palette['--navy-700']);
+            root.style.setProperty('--navy-600', palette['--navy-600']);
+            root.style.setProperty('--navy-500', palette['--navy-500']);
+            root.style.setProperty('--navy', palette['--navy']);
+            root.style.setProperty('--color-success', palette['--color-success']);
+            if (darkMode) {
+              root.style.setProperty('--page-bg', palette['--page-bg-dark']);
+              root.style.setProperty('--surface-1', palette['--surface-1-dark']);
+              root.style.setProperty('--surface-2', palette['--surface-2-dark']);
+              root.style.setProperty('--surface-3', palette['--surface-3-dark']);
+              root.style.setProperty('--surface-hover', palette['--surface-hover-dark']);
+              root.style.setProperty('--surface-active', palette['--surface-active-dark']);
+              root.style.setProperty('--sidebar-bg', palette['--sidebar-bg-dark']);
+              root.style.setProperty('--topbar-bg', palette['--topbar-bg-dark']);
+            } else {
+              root.style.setProperty('--sidebar-bg', palette['--sidebar-bg-light']);
+            }
+          }
+        }
+      };
+      xhr.send();
+    } catch(e) { /* silent fail */ }
+  }
+
   function initTheme() {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    applySiteColors();
   }
 
   function toggleTheme() {
