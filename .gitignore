@@ -8,3 +8,4 @@ ibxi.db-wal
 admin_config.json
 *.jpg
 !assets/**/*.jpg
+SERVER_INFO.md
