@@ -51,7 +51,7 @@ BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
 CONFIG_FILE = os.path.join(BASE_DIR, 'admin_config.json')
 UPLOAD_DIR = os.path.join(BASE_DIR, 'assets', 'uploads')
 
-ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf'}
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024     # 5 MB
 MAX_BODY_SIZE = 10 * 1024 * 1024      # 10 MB
 SESSION_DURATION = 86400              # 24 hours
@@ -67,6 +67,7 @@ MAGIC_BYTES = {
     b'\x89PNG\r\n\x1a\n':  '.png',   # PNG
     b'GIF87a':              '.gif',   # GIF87a
     b'GIF89a':              '.gif',   # GIF89a
+    b'%PDF':               '.pdf',   # PDF
 }
 
 # ─── In-memory state ───────────────────────────────────────────────────────
@@ -527,6 +528,28 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 logging.exception('Failed to load audit log')
                 self.send_json(500, {'error': 'Failed to load audit log'})
 
+        elif path == '/api/applications':
+            token = self.require_auth()
+            if not token:
+                return
+            try:
+                items = db.get_applications()
+                self.send_json(200, {'items': items})
+            except Exception:
+                logging.exception('Failed to load applications')
+                self.send_json(500, {'error': 'Failed to load applications'})
+
+        elif path == '/api/contact-submissions':
+            token = self.require_auth()
+            if not token:
+                return
+            try:
+                items = db.get_contact_submissions()
+                self.send_json(200, {'items': items})
+            except Exception:
+                logging.exception('Failed to load contact submissions')
+                self.send_json(500, {'error': 'Failed to load submissions'})
+
         else:
             # Unknown /api/ routes return JSON 404
             if path.startswith('/api/'):
@@ -862,6 +885,66 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 logging.exception('Failed to save custom items')
                 self.send_json(500, {'error': 'Failed to save items'})
 
+        # ── Application submission (public) ──────────────────────────
+        elif path == '/api/application':
+            body = self.parse_json_body()
+            if body is None:
+                return
+            full_name = body.get('fullName', '').strip()
+            email = body.get('email', '').strip()
+            if not full_name:
+                self.send_json(400, {'error': 'Full name is required'})
+                return
+            try:
+                db.save_application(
+                    full_name=full_name,
+                    email=email,
+                    phone=body.get('phone', ''),
+                    program=body.get('program', ''),
+                    education=body.get('education', ''),
+                    motivation=body.get('motivation', ''),
+                    ip=client_ip,
+                )
+                self.send_json(200, {'success': True, 'message': 'Application submitted'})
+            except Exception:
+                logging.exception('Failed to save application')
+                self.send_json(500, {'error': 'Failed to submit application'})
+
+        # ── Application status update (admin) ────────────────────────
+        elif path == '/api/application-status':
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+            body = self.parse_json_body()
+            if body is None:
+                return
+            try:
+                db.update_application_status(body['id'], body['status'])
+                db.log_audit('application_status', details=f"id={body['id']} status={body['status']}", ip=client_ip)
+                self.send_json(200, {'success': True})
+            except Exception:
+                logging.exception('Failed to update application status')
+                self.send_json(500, {'error': 'Failed to update status'})
+
+        # ── Contact submission status update (admin) ─────────────────
+        elif path == '/api/contact-status':
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+            body = self.parse_json_body()
+            if body is None:
+                return
+            try:
+                db.update_contact_status(body['id'], body['status'])
+                self.send_json(200, {'success': True})
+            except Exception:
+                logging.exception('Failed to update contact status')
+                self.send_json(500, {'error': 'Failed to update status'})
+
         # ── Logout ─────────────────────────────────────────────────────
         elif path == '/api/logout':
             valid, token = check_auth(self.headers)
@@ -879,6 +962,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
 def init_and_migrate():
     """Initialize database and migrate from data.js if needed."""
     db.init_db()
+    db.migrate_schema()
 
     # Check if database has any data
     conn = db.get_connection()

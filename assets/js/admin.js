@@ -105,6 +105,7 @@
         { key: 'desc', type: 'textarea', label: 'Tavsif (UZ)' },
         { key: 'desc_en', type: 'textarea', label: 'Description (EN)' },
         { key: 'desc_ar', type: 'textarea', label: 'Description (AR)', dir: 'rtl' },
+        { key: 'link', type: 'text', label: 'Havola / Link', placeholder: 'https://...' },
       ]
     },
     events: {
@@ -151,6 +152,7 @@
         { key: 'language', type: 'text', label: 'Language', half: true, placeholder: 'O\'zbekcha' },
         { key: 'series', type: 'text', label: 'Series', half: true },
         { key: 'tags', type: 'tags', label: 'Tags' },
+        { key: 'pdfUrl', type: 'file', label: 'PDF fayl', accept: '.pdf' },
       ]
     },
     team: {
@@ -170,6 +172,10 @@
         { key: 'bio_en', type: 'textarea', label: 'Bio (EN)' },
         { key: 'education', type: 'text', label: 'Education' },
         { key: 'specialization', type: 'tags', label: 'Specialization' },
+        { key: 'email', type: 'text', label: 'Email', half: true, placeholder: 'email@example.com' },
+        { key: 'phone', type: 'text', label: 'Telefon', half: true, placeholder: '+998 90 123 45 67' },
+        { key: 'telegram', type: 'text', label: 'Telegram', half: true, placeholder: '@username' },
+        { key: 'website', type: 'text', label: 'Website', half: true, placeholder: 'https://...' },
       ]
     },
     programs: {
@@ -270,6 +276,7 @@
         { key: 'category', type: 'text', label: 'Category', half: true, placeholder: 'Simpozium' },
         { key: 'date', type: 'text', label: 'Date', half: true, placeholder: '2025-03-15' },
         { key: 'color', type: 'color', label: 'Color', half: true },
+        { key: 'images', type: 'gallery', label: 'Rasmlar / Photos' },
       ]
     },
   };
@@ -362,7 +369,9 @@
         case 'admin-modal-close': closeAdminModal(el.dataset.modal); break;
         case 'admin-confirm': handleConfirmAction(); break;
         case 'admin-img-clear': handleImgClear(el.dataset.key); break;
+        case 'gallery-remove': handleGalleryRemove(el.dataset.key, +el.dataset.idx); break;
         case 'admin-toggle': handleToggleClick(el); break;
+        case 'app-status-update': handleStatusUpdate(el); break;
         case 'admin-mobile-menu': toggleMobileSidebar(); break;
         case 'admin-new-section': openNewSectionForm(); break;
         case 'admin-edit-section': openEditSectionForm(el.dataset.slug); break;
@@ -411,6 +420,14 @@
       if (e.target.type === 'file' && e.target.closest('.admin-img-upload-btn')) {
         var fieldKey = e.target.closest('.admin-img-field').dataset.key;
         handleImgUpload(e.target, fieldKey);
+      }
+      if (e.target.type === 'file' && e.target.closest('.admin-file-upload-btn')) {
+        var fieldKey2 = e.target.closest('.admin-img-field').dataset.key;
+        handleFileUpload(e.target, fieldKey2);
+      }
+      if (e.target.type === 'file' && e.target.closest('.admin-gallery-add-btn')) {
+        var fieldKey3 = e.target.closest('.admin-gallery-field').dataset.key;
+        handleGalleryUpload(e.target, fieldKey3);
       }
     });
 
@@ -574,6 +591,8 @@
     else if (section === 'i18n') renderI18n(el);
     else if (section === 'settings') { renderSettings(el); initColorPicker(); }
     else if (section === 'activity') renderActivity(el);
+    else if (section === 'messages') renderMessages(el);
+    else if (section === 'applications') renderApplications(el);
     else renderSection(el, section);
     window.scrollTo(0, 0);
     document.getElementById('admin-main').scrollTop = 0;
@@ -631,6 +650,13 @@
         '<div class="admin-nav-item" data-action="admin-new-section" style="opacity:0.6">' +
           '<span class="nav-icon">' + I.plus + '</span><span>Bo\'lim qo\'shish</span>' +
         '</div>' +
+        '<div class="admin-nav-label">Inbox</div>' +
+        '<div class="admin-nav-item ' + (currentSection==='messages'?'active':'') + '" data-action="admin-nav" data-section="messages">' +
+          '<span class="nav-icon">' + I.chat + '</span><span>Xabarlar</span>' +
+        '</div>' +
+        '<div class="admin-nav-item ' + (currentSection==='applications'?'active':'') + '" data-action="admin-nav" data-section="applications">' +
+          '<span class="nav-icon">' + I.book + '</span><span>Arizalar</span>' +
+        '</div>' +
         '<div class="admin-nav-label">System</div>' +
         '<div class="admin-nav-item ' + (currentSection==='settings'?'active':'') + '" data-action="admin-nav" data-section="settings">' +
           '<span class="nav-icon">' + I.settings + '</span><span>Settings</span>' +
@@ -648,7 +674,7 @@
   // ───────────────────────────────────────────
   function renderTopbar() {
     var tb = document.getElementById('admin-topbar');
-    var labels = { dashboard:'Dashboard', i18n:'Translations', settings:'Settings', activity:'Activity Log' };
+    var labels = { dashboard:'Dashboard', i18n:'Translations', settings:'Settings', activity:'Activity Log', messages:'Xabarlar', applications:'Arizalar' };
     var label = labels[currentSection] || (SCHEMAS[currentSection] ? SCHEMAS[currentSection].label : currentSection);
     tb.innerHTML =
       '<div class="admin-topbar-left">' +
@@ -736,6 +762,107 @@
     } catch (e) {
       el.innerHTML = '<div class="admin-dashboard-header"><h1>Activity Log</h1></div><p style="color:var(--text-3)">Yuklab bo\'lmadi</p>';
     }
+  }
+
+  // ───────────────────────────────────────────
+  // MESSAGES (contact submissions)
+  // ───────────────────────────────────────────
+  async function renderMessages(el) {
+    el.innerHTML = '<div class="admin-dashboard-header"><h1>Xabarlar</h1><p>Yuklanmoqda...</p></div>';
+    try {
+      var res = await fetch('/api/contact-submissions', { headers: { 'Authorization': 'Bearer ' + authToken } });
+      var data = await res.json();
+      var items = data.items || [];
+      if (items.length) {
+        var rows = items.map(function(m) {
+          var statusCls = m.status === 'read' ? 'admin-status-read' : 'admin-status-unread';
+          return '<tr class="' + statusCls + '">' +
+            '<td><strong>' + esc(m.name || '') + '</strong><br><small>' + esc(m.email || '') + '</small></td>' +
+            '<td>' + esc(m.subject || '') + '</td>' +
+            '<td style="max-width:300px;white-space:pre-wrap">' + esc(m.message || '') + '</td>' +
+            '<td><small>' + esc(m.submitted_at || '') + '</small></td>' +
+            '<td>' +
+              (m.status !== 'read' ? '<button class="admin-btn admin-btn-ghost admin-btn-sm" data-action="app-status-update" data-type="contact" data-id="' + m.id + '" data-status="read">O\'qildi</button>' : '<span style="color:var(--text-3)">O\'qilgan</span>') +
+            '</td></tr>';
+        }).join('');
+        el.innerHTML =
+          '<div class="admin-dashboard-header"><h1>Xabarlar</h1><p>' + items.length + ' ta xabar</p></div>' +
+          '<div style="overflow-x:auto"><table class="admin-i18n-table">' +
+            '<thead><tr><th>Kimdan</th><th>Mavzu</th><th>Xabar</th><th>Sana</th><th>Holat</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table></div>';
+      } else {
+        el.innerHTML = '<div class="admin-dashboard-header"><h1>Xabarlar</h1></div>' +
+          '<div class="admin-empty"><div class="admin-empty-icon">' + I.chat + '</div><div class="admin-empty-text">Hozircha xabarlar yo\'q</div></div>';
+      }
+    } catch (e) {
+      el.innerHTML = '<div class="admin-dashboard-header"><h1>Xabarlar</h1></div><p style="color:var(--text-3)">Yuklab bo\'lmadi</p>';
+    }
+  }
+
+  // ───────────────────────────────────────────
+  // APPLICATIONS (ariza)
+  // ───────────────────────────────────────────
+  async function renderApplications(el) {
+    el.innerHTML = '<div class="admin-dashboard-header"><h1>Arizalar</h1><p>Yuklanmoqda...</p></div>';
+    try {
+      var res = await fetch('/api/applications', { headers: { 'Authorization': 'Bearer ' + authToken } });
+      var data = await res.json();
+      var items = data.items || [];
+      if (items.length) {
+        var rows = items.map(function(a) {
+          var badge = a.status === 'accepted' ? '<span class="admin-badge admin-badge-success">Qabul</span>'
+            : a.status === 'rejected' ? '<span class="admin-badge admin-badge-error">Rad</span>'
+            : '<span class="admin-badge admin-badge-pending">Kutilmoqda</span>';
+          return '<tr>' +
+            '<td><strong>' + esc(a.full_name || '') + '</strong><br><small>' + esc(a.email || '') + '</small></td>' +
+            '<td>' + esc(a.phone || '') + '</td>' +
+            '<td>' + esc(a.program || '') + '</td>' +
+            '<td>' + esc(a.education || '') + '</td>' +
+            '<td style="max-width:200px;white-space:pre-wrap">' + esc(a.motivation || '') + '</td>' +
+            '<td><small>' + esc(a.submitted_at || '') + '</small></td>' +
+            '<td>' + badge + '</td>' +
+            '<td>' +
+              '<button class="admin-btn admin-btn-ghost admin-btn-sm" data-action="app-status-update" data-type="application" data-id="' + a.id + '" data-status="accepted" title="Qabul qilish">&#10003;</button> ' +
+              '<button class="admin-btn admin-btn-ghost admin-btn-sm" data-action="app-status-update" data-type="application" data-id="' + a.id + '" data-status="rejected" title="Rad etish">&#10007;</button>' +
+            '</td></tr>';
+        }).join('');
+        el.innerHTML =
+          '<div class="admin-dashboard-header"><h1>Arizalar</h1><p>' + items.length + ' ta ariza</p></div>' +
+          '<div style="overflow-x:auto"><table class="admin-i18n-table">' +
+            '<thead><tr><th>Ism</th><th>Telefon</th><th>Dastur</th><th>Ta\'lim</th><th>Motivatsiya</th><th>Sana</th><th>Holat</th><th>Amal</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table></div>';
+      } else {
+        el.innerHTML = '<div class="admin-dashboard-header"><h1>Arizalar</h1></div>' +
+          '<div class="admin-empty"><div class="admin-empty-icon">' + I.book + '</div><div class="admin-empty-text">Hozircha arizalar yo\'q</div></div>';
+      }
+    } catch (e) {
+      el.innerHTML = '<div class="admin-dashboard-header"><h1>Arizalar</h1></div><p style="color:var(--text-3)">Yuklab bo\'lmadi</p>';
+    }
+  }
+
+  async function handleStatusUpdate(el) {
+    var type = el.dataset.type;
+    var id = el.dataset.id;
+    var status = el.dataset.status;
+    var endpoint = type === 'application' ? '/api/application-status' : '/api/contact-status';
+    try {
+      var res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + authToken,
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ id: +id, status: status })
+      });
+      var r = await res.json();
+      if (r.success) {
+        toast('Holat yangilandi', 'success');
+        nav(currentSection);
+      } else { toast(r.error || 'Xatolik', 'error'); }
+    } catch (e) { toast('Xatolik', 'error'); }
   }
 
   // ───────────────────────────────────────────
@@ -909,6 +1036,40 @@
             '<input type="hidden" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" />' +
           '</div></div>';
       }
+      if (f.type === 'file') {
+        var filePreview = val
+          ? '<a href="' + esc(String(val)) + '" target="_blank" class="admin-file-link">' + I.book + ' ' + esc(String(val).split('/').pop()) + '</a>'
+          : '<span class="admin-file-none">Fayl yo\'q</span>';
+        return '<div class="admin-form-group full-width"><label class="admin-form-label">' + f.label + '</label>' +
+          '<div class="admin-img-field" data-key="' + f.key + '">' +
+            '<div class="admin-file-preview">' + filePreview + '</div>' +
+            '<div class="admin-img-actions">' +
+              '<label class="admin-btn admin-btn-ghost admin-file-upload-btn">' +
+                I.backup + ' Fayl tanlash' +
+                '<input type="file" accept="' + (f.accept || '*') + '" style="display:none" />' +
+              '</label>' +
+              (val ? '<button type="button" class="admin-btn admin-btn-ghost" data-action="admin-img-clear" data-key="' + f.key + '">Tozalash</button>' : '') +
+            '</div>' +
+            '<input type="hidden" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" />' +
+          '</div></div>';
+      }
+      if (f.type === 'gallery') {
+        var imgs = Array.isArray(val) ? val : [];
+        var galleryHtml = imgs.map(function(src, gi) {
+          return '<div class="admin-gallery-thumb" data-idx="' + gi + '">' +
+            '<img src="' + esc(src) + '" />' +
+            '<button type="button" class="admin-gallery-remove" data-action="gallery-remove" data-key="' + f.key + '" data-idx="' + gi + '">\u00d7</button>' +
+          '</div>';
+        }).join('');
+        return '<div class="admin-form-group full-width"><label class="admin-form-label">' + f.label + ' (' + imgs.length + ')</label>' +
+          '<div class="admin-gallery-field" data-key="' + f.key + '">' +
+            '<div class="admin-gallery-grid">' + galleryHtml + '</div>' +
+            '<label class="admin-btn admin-btn-ghost admin-gallery-add-btn">' +
+              I.plus + ' Rasm qo\'shish' +
+              '<input type="file" accept="image/*" multiple style="display:none" />' +
+            '</label>' +
+          '</div></div>';
+      }
       return '<div class="' + cls + '"><label class="admin-form-label">' + f.label + req + '</label>' +
         '<input type="' + (f.type==='number'?'number':'text') + '" class="admin-form-input" data-key="' + f.key + '" value="' + esc(String(val)) + '" ' + dir + ' ' + ro + ' ' + ph + ' /></div>';
     }).join('');
@@ -981,8 +1142,77 @@
     var wrap = modal.querySelector('.admin-img-field[data-key="' + key + '"]');
     if (!wrap) return;
     wrap.querySelector('input[data-key="' + key + '"]').value = '';
-    wrap.querySelector('.admin-img-preview-wrap').innerHTML =
-      '<div class="admin-img-placeholder">' + I.image + '<span>Rasm yo\'q</span></div>';
+    var pw = wrap.querySelector('.admin-img-preview-wrap') || wrap.querySelector('.admin-file-preview');
+    if (pw) pw.innerHTML = '<div class="admin-img-placeholder">' + I.image + '<span>Rasm yo\'q</span></div>';
+  }
+
+  // File (PDF) upload handler
+  async function handleFileUpload(input, key) {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast('Fayl juda katta (max 5MB)', 'error'); return; }
+    var wrap = input.closest('.admin-img-field');
+    var fp = wrap.querySelector('.admin-file-preview');
+    fp.innerHTML = '<span class="admin-file-none">Yuklanmoqda...</span>';
+    var fd = new FormData();
+    fd.append('file', file);
+    var uploadHeaders = { 'Authorization': 'Bearer ' + authToken };
+    if (csrfToken) uploadHeaders['X-CSRF-Token'] = csrfToken;
+    try {
+      var res = await fetch('/api/upload', { method: 'POST', headers: uploadHeaders, body: fd });
+      var r = await res.json();
+      if (r.success) {
+        wrap.querySelector('input[data-key="' + key + '"]').value = r.path;
+        fp.innerHTML = '<a href="' + esc(r.path) + '" target="_blank" class="admin-file-link">' + I.book + ' ' + esc(file.name) + '</a>';
+        toast('Fayl yuklandi', 'success');
+      } else {
+        toast(r.error || 'Yuklash xatosi', 'error');
+        fp.innerHTML = '<span class="admin-file-none">Fayl yo\'q</span>';
+      }
+    } catch (e) {
+      toast('Yuklash xatosi', 'error');
+      fp.innerHTML = '<span class="admin-file-none">Fayl yo\'q</span>';
+    }
+  }
+
+  // Gallery multi-image upload handler
+  async function handleGalleryUpload(input, key) {
+    var files = Array.from(input.files);
+    if (!files.length) return;
+    var wrap = input.closest('.admin-gallery-field');
+    var grid = wrap.querySelector('.admin-gallery-grid');
+    var uploadHeaders = { 'Authorization': 'Bearer ' + authToken };
+    if (csrfToken) uploadHeaders['X-CSRF-Token'] = csrfToken;
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i];
+      if (!file.type.startsWith('image/')) continue;
+      if (file.size > 5 * 1024 * 1024) { toast('Fayl juda katta: ' + file.name, 'error'); continue; }
+      var fd = new FormData();
+      fd.append('file', file);
+      try {
+        var res = await fetch('/api/upload', { method: 'POST', headers: uploadHeaders, body: fd });
+        var r = await res.json();
+        if (r.success) {
+          var idx = grid.children.length;
+          var thumb = document.createElement('div');
+          thumb.className = 'admin-gallery-thumb';
+          thumb.dataset.idx = idx;
+          thumb.innerHTML = '<img src="' + esc(r.path) + '" />' +
+            '<button type="button" class="admin-gallery-remove" data-action="gallery-remove" data-key="' + key + '" data-idx="' + idx + '">\u00d7</button>';
+          grid.appendChild(thumb);
+        }
+      } catch (e) { toast('Yuklash xatosi', 'error'); }
+    }
+    var label = wrap.closest('.admin-form-group').querySelector('.admin-form-label');
+    if (label) label.textContent = wrap.closest('.admin-form-group').querySelector('.admin-form-label').textContent.replace(/\(\d+\)/, '(' + grid.children.length + ')');
+    input.value = '';
+    toast(files.length + ' ta rasm yuklandi', 'success');
+  }
+
+  function handleGalleryRemove(key, idx) {
+    var modal = document.getElementById('admin-modal-content');
+    var grid = modal.querySelector('.admin-gallery-field[data-key="' + key + '"] .admin-gallery-grid');
+    if (grid && grid.children[idx]) grid.children[idx].remove();
   }
 
   // Collect form data
@@ -997,6 +1227,12 @@
       } else if (f.type === 'tags') {
         var w = modal.querySelector('.admin-tags-wrap[data-key="' + f.key + '"]');
         item[f.key] = w ? Array.from(w.querySelectorAll('.admin-tag-pill')).map(function(p) { return p.childNodes[0].textContent.trim(); }) : [];
+      } else if (f.type === 'gallery') {
+        var gf = modal.querySelector('.admin-gallery-field[data-key="' + f.key + '"]');
+        item[f.key] = gf ? Array.from(gf.querySelectorAll('.admin-gallery-thumb img')).map(function(img) { return img.getAttribute('src'); }) : [];
+      } else if (f.type === 'file') {
+        var fi = modal.querySelector('input[data-key="' + f.key + '"]');
+        item[f.key] = fi ? fi.value : '';
       } else if (f.type === 'color') {
         var inp = modal.querySelector('input[data-key="' + f.key + '"]');
         item[f.key] = inp ? inp.value : '';

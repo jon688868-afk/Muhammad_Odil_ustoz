@@ -1506,7 +1506,7 @@
       + '<p style="font-size:12.5px;color:var(--text-3);line-height:1.7">' + detailText + '</p>'
       + authorLine
       + '<div style="display:flex;gap:10px;margin-top:16px">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + shareMsg + '" data-type="info" data-icon="">' + _i(IC.share) + ' ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
+      + '<button class="btn btn-gold" data-action="share" data-title="IBXI">' + _i(IC.share) + ' ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
       + '<button class="btn btn-ghost" data-action="navigate" data-page="archive">' + allNewsLabel + '</button>'
       + '</div>';
     openModal('news-modal');
@@ -1531,7 +1531,9 @@
       + '</div>'
       + '<div class="progress"><div class="progress-bar" style="width:' + pct + '%"></div></div>'
       + '<p style="font-size:12px;color:var(--text-3);margin-top:8px">' + esc(isEn ? 'Research intensity' : 'Tadqiqot intensivligi') + ': ' + pct + '%</p>'
-      + '<button class="btn btn-gold" style="margin-top:16px" data-action="navigate" data-page="research">' + goLabel + '</button>';
+      + (a.link
+        ? '<a href="' + escAttr(a.link) + '" target="_blank" class="btn btn-gold" style="margin-top:16px;text-decoration:none;display:inline-flex;align-items:center;gap:6px">' + _i(IC.link) + ' ' + goLabel + '</a>'
+        : '<button class="btn btn-gold" style="margin-top:16px" data-action="navigate" data-page="research">' + goLabel + '</button>');
     openModal('news-modal');
   }
 
@@ -1562,7 +1564,9 @@
       + '</div>'
       + tagsHTML
       + '<div style="display:flex;gap:10px;flex-wrap:wrap">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="">' + _i(IC.download) + ' ' + esc(isEn ? 'Download PDF' : 'PDF yuklab olish') + '</button>'
+      + (p.pdfUrl
+        ? '<a href="' + escAttr(p.pdfUrl) + '" target="_blank" download class="btn btn-gold" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">' + _i(IC.download) + ' ' + esc(isEn ? 'Download PDF' : 'PDF yuklab olish') + '</a>'
+        : '<button class="btn btn-gold" data-action="toast" data-msg="' + dlMsg + '" data-type="info" data-icon="">' + _i(IC.download) + ' ' + esc(isEn ? 'Download PDF' : 'PDF yuklab olish') + '</button>')
       + '<button class="btn btn-ghost" style="' + (saved ? 'border-color:#01CED1;color:#01CED1' : '') + '" data-action="save-reading" data-id="' + p.id + '">' + _i(IC.bookmark) + ' ' + esc(saved ? (isEn ? 'Saved' : 'Saqlangan') : (isEn ? 'Save' : 'Saqlash')) + '</button>'
       + '</div>';
     openModal('news-modal');
@@ -1715,7 +1719,15 @@
       + '<div style="color:var(--text-3);font-size:12px;margin-top:3px">' + esc(L(m,'dept','dept_en','dept_ar','dept_tr')) + '</div>'
       + '</div>'
       + bioHTML + eduHTML + specHTML
-      + '<button class="btn btn-gold w-full" data-action="toast" data-msg="' + contMsg + '" data-type="info" data-icon="">' + _i(IC.mail) + ' ' + esc(isEn ? 'Contact' : 'Aloqa qilish') + '</button>';
+      + (function() {
+        var contactHTML = '';
+        if (m.email) contactHTML += '<a href="mailto:' + escAttr(m.email) + '" class="btn btn-gold w-full" style="margin-bottom:8px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">' + _i(IC.mail) + ' ' + esc(m.email) + '</a>';
+        if (m.phone) contactHTML += '<a href="tel:' + escAttr(m.phone) + '" class="btn btn-ghost w-full" style="margin-bottom:8px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">' + _i(IC.phone) + ' ' + esc(m.phone) + '</a>';
+        if (m.telegram) contactHTML += '<a href="https://t.me/' + escAttr(m.telegram.replace('@','')) + '" target="_blank" class="btn btn-ghost w-full" style="margin-bottom:8px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">' + _i(IC.send) + ' Telegram: ' + esc(m.telegram) + '</a>';
+        if (m.website) contactHTML += '<a href="' + escAttr(m.website) + '" target="_blank" class="btn btn-ghost w-full" style="margin-bottom:8px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">' + _i(IC.globe) + ' Website</a>';
+        if (!contactHTML) contactHTML = '<div style="color:var(--text-3);text-align:center;font-size:13px;padding:12px">' + esc(isEn ? 'No contact info available' : 'Aloqa ma\'lumotlari kiritilmagan') + '</div>';
+        return contactHTML;
+      })();
     openModal('news-modal');
   }
 
@@ -1741,7 +1753,7 @@
       + '<p style="font-size:13.5px;color:var(--text-2);line-height:1.9;margin-bottom:16px">' + esc(L(b,'excerpt','excerpt_en','excerpt_ar','excerpt_tr')) + '</p>'
       + tagsHTML
       + '<div style="display:flex;gap:10px">'
-      + '<button class="btn btn-gold" data-action="toast" data-msg="' + shareMsg + '" data-type="info" data-icon="">' + _i(IC.share) + ' ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
+      + '<button class="btn btn-gold" data-action="share" data-title="IBXI">' + _i(IC.share) + ' ' + esc(isEn ? 'Share' : 'Ulashish') + '</button>'
       + '<button class="btn btn-ghost" data-action="navigate" data-page="blog">' + esc(isEn ? 'All Articles' : 'Barcha maqolalar') + '</button>'
       + '</div>';
     openModal('news-modal');
@@ -2002,6 +2014,19 @@
   // ============================================
   // FORMS
   // ============================================
+  function shareContent(title) {
+    var url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: title, url: url }).catch(function() {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function() {
+        showToast(currentLang === 'en' ? 'Link copied!' : 'Havola nusxalandi!', 'success', IC.check);
+      });
+    } else {
+      showToast(currentLang === 'en' ? 'Sharing...' : 'Ulashilmoqda...', 'info', IC.info);
+    }
+  }
+
   function submitContact(e) {
     e.preventDefault();
     var form = e.target;
@@ -2027,35 +2052,110 @@
       btn.disabled = true;
       var origText = btn.textContent;
       btn.innerHTML = '<span class="btn-spinner"></span> ' + esc(t.loading_text);
-      setTimeout(function () {
-        btn.disabled  = false;
+
+      var subjectEl = form.querySelector('select');
+      var messageEl = form.querySelector('textarea');
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nameInput ? nameInput.value.trim() : '',
+          email: emailInput ? emailInput.value.trim() : '',
+          subject: subjectEl ? subjectEl.value : '',
+          message: messageEl ? messageEl.value.trim() : ''
+        })
+      }).then(function(res) { return res.json(); })
+      .then(function(r) {
+        btn.disabled = false;
         btn.textContent = origText;
-        showToast(t.form_success, 'success', IC.check);
-        form.reset();
-      }, 1200);
+        if (r.success) {
+          showToast(t.form_success, 'success', IC.check);
+          form.reset();
+        } else {
+          showToast(r.error || 'Xatolik', 'error', IC.alert);
+        }
+      }).catch(function() {
+        btn.disabled = false;
+        btn.textContent = origText;
+        showToast('Xatolik yuz berdi', 'error', IC.alert);
+      });
     }
   }
 
   function submitApplication(e) {
     e.preventDefault();
-    showToast(
-      currentLang === 'en' ? 'Application received! You will be notified by email.'
-      : currentLang === 'tr' ? 'Başvurunuz alındı! E-posta ile bilgilendirileceksiniz.'
-      : 'Arizangiz qabul qilindi! Natija elektron pochta orqali bildiriladi.',
-      'success', _s(IC.grad)
-    );
-    e.target.reset();
+    var form = e.target;
+    var inputs = form.querySelectorAll('input, select, textarea');
+    var data = {};
+    inputs.forEach(function(inp) {
+      if (inp.name) data[inp.name] = inp.value.trim();
+      else if (inp.type === 'text' || inp.type === 'email') {
+        if (!data.fullName && inp.type === 'text') data.fullName = inp.value.trim();
+        else if (inp.type === 'email') data.email = inp.value.trim();
+      } else if (inp.tagName === 'SELECT' && !data.program) data.program = inp.value;
+      else if (inp.tagName === 'TEXTAREA' && !data.motivation) data.motivation = inp.value.trim();
+    });
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+    fetch('/api/application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function(res) { return res.json(); })
+    .then(function(r) {
+      if (btn) btn.disabled = false;
+      if (r.success) {
+        showToast(
+          currentLang === 'en' ? 'Application received! You will be notified by email.'
+          : 'Arizangiz muvaffaqiyatli qabul qilindi!',
+          'success', _s(IC.grad)
+        );
+        form.reset();
+      } else {
+        showToast(r.error || 'Xatolik', 'error', IC.alert);
+      }
+    }).catch(function() {
+      if (btn) btn.disabled = false;
+      showToast('Xatolik yuz berdi', 'error', IC.alert);
+    });
   }
 
   function submitVisiting(e) {
     e.preventDefault();
-    showToast(
-      currentLang === 'en' ? 'Visiting Scholar application received!'
-      : currentLang === 'tr' ? 'Ziyaretçi Akademisyen başvurunuz alındı!'
-      : 'Mehmon olim arizangiz qabul qilindi!',
-      'success', _s(IC.globe)
-    );
-    e.target.reset();
+    var form = e.target;
+    var inputs = form.querySelectorAll('input, select, textarea');
+    var data = {};
+    inputs.forEach(function(inp) {
+      if (inp.type === 'text') {
+        if (!data.fullName) data.fullName = inp.value.trim();
+        else if (!data.phone) data.phone = inp.value.trim();
+      }
+      else if (inp.tagName === 'SELECT') data.program = 'Visiting Scholar - ' + inp.value;
+      else if (inp.tagName === 'TEXTAREA') data.motivation = inp.value.trim();
+    });
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+    fetch('/api/application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function(res) { return res.json(); })
+    .then(function(r) {
+      if (btn) btn.disabled = false;
+      if (r.success) {
+        showToast(
+          currentLang === 'en' ? 'Visiting Scholar application received!'
+          : 'Mehmon olim arizangiz qabul qilindi!',
+          'success', _s(IC.globe)
+        );
+        form.reset();
+      } else {
+        showToast(r.error || 'Xatolik', 'error', IC.alert);
+      }
+    }).catch(function() {
+      if (btn) btn.disabled = false;
+      showToast('Xatolik yuz berdi', 'error', IC.alert);
+    });
   }
 
   function applyProgram(id) {
@@ -2316,6 +2416,9 @@
             break;
           case 'toast':
             showToast(el.dataset.msg || '', el.dataset.type || 'info', el.dataset.icon || IC.info);
+            break;
+          case 'share':
+            shareContent(el.dataset.title || document.title);
             break;
           case 'download-report':
             showToast(el.dataset.msg || '', 'info', _s(IC.download));

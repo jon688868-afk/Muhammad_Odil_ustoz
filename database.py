@@ -45,7 +45,7 @@ _SECTION_TO_TABLE = {
 # Maps  db_column -> js_key  (used when reading FROM the DB)
 _DB_TO_JS = {
     "research_areas": {"description": "desc", "avatar_color": "avatarColor"},
-    "publications":   {"description": "desc"},
+    "publications":   {"description": "desc", "pdf_url": "pdfUrl"},
     "team":           {"avatar_color": "avatarColor"},
     "news":           {"read_time": "readTime"},
     "blog_posts":     {"read_time": "readTime"},
@@ -55,7 +55,7 @@ _DB_TO_JS = {
 # Reverse: maps  js_key -> db_column  (used when writing INTO the DB)
 _JS_TO_DB = {
     "research_areas": {"desc": "description", "avatarColor": "avatar_color"},
-    "publications":   {"desc": "description"},
+    "publications":   {"desc": "description", "pdfUrl": "pdf_url"},
     "team":           {"avatarColor": "avatar_color"},
     "news":           {"readTime": "read_time"},
     "blog_posts":     {"readTime": "read_time"},
@@ -67,6 +67,7 @@ _JSON_COLUMNS = {
     "publications": {"tags"},
     "team":         {"specialization"},
     "blog_posts":   {"tags"},
+    "gallery":      {"images"},
 }
 
 
@@ -118,6 +119,7 @@ CREATE TABLE IF NOT EXISTS research_areas (
     description  TEXT,
     desc_en      TEXT,
     desc_ar      TEXT,
+    link         TEXT,
     sort_order   INTEGER DEFAULT 0
 );
 
@@ -156,6 +158,7 @@ CREATE TABLE IF NOT EXISTS publications (
     language     TEXT,
     series       TEXT,
     tags         TEXT,
+    pdf_url      TEXT,
     sort_order   INTEGER DEFAULT 0
 );
 
@@ -172,6 +175,10 @@ CREATE TABLE IF NOT EXISTS team (
     bio_en         TEXT,
     education      TEXT,
     specialization TEXT,
+    email          TEXT,
+    phone          TEXT,
+    telegram       TEXT,
+    website        TEXT,
     sort_order     INTEGER DEFAULT 0
 );
 
@@ -254,6 +261,7 @@ CREATE TABLE IF NOT EXISTS gallery (
     title_en     TEXT,
     date         TEXT,
     count        INTEGER DEFAULT 0,
+    images       TEXT,
     sort_order   INTEGER DEFAULT 0
 );
 
@@ -273,6 +281,20 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
     email        TEXT,
     subject      TEXT,
     message      TEXT,
+    submitted_at TEXT,
+    ip_address   TEXT,
+    status       TEXT DEFAULT 'unread'
+);
+
+CREATE TABLE IF NOT EXISTS applications (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name    TEXT NOT NULL,
+    email        TEXT,
+    phone        TEXT,
+    program      TEXT,
+    education    TEXT,
+    motivation   TEXT,
+    status       TEXT DEFAULT 'pending',
     submitted_at TEXT,
     ip_address   TEXT
 );
@@ -314,7 +336,7 @@ _TABLE_COLUMNS = {
         "icon", "count",
         "title", "title_en", "title_ar",
         "description", "desc_en", "desc_ar",
-        "sort_order",
+        "link", "sort_order",
     ],
     "events": [
         "day", "month", "month_en", "month_ar",
@@ -328,7 +350,7 @@ _TABLE_COLUMNS = {
         "title", "title_en",
         "author", "description", "desc_en",
         "color", "pages", "language", "series",
-        "tags", "sort_order",
+        "tags", "pdf_url", "sort_order",
     ],
     "team": [
         "name", "initials", "avatar_color",
@@ -336,6 +358,7 @@ _TABLE_COLUMNS = {
         "dept", "dept_en",
         "bio", "bio_en",
         "education", "specialization",
+        "email", "phone", "telegram", "website",
         "sort_order",
     ],
     "programs": [
@@ -371,7 +394,7 @@ _TABLE_COLUMNS = {
     "gallery": [
         "icon", "category", "color",
         "title", "title_en",
-        "date", "count",
+        "date", "count", "images",
         "sort_order",
     ],
 }
@@ -751,6 +774,74 @@ def save_contact(name, email, subject, message, ip=None):
 
 
 # ---------------------------------------------------------------------------
+# Applications (ariza)
+# ---------------------------------------------------------------------------
+
+def save_application(full_name, email, phone, program, education, motivation, ip=None):
+    """Save an application submission. Returns the new row id."""
+    conn = get_connection()
+    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    try:
+        cursor = conn.execute(
+            "INSERT INTO applications "
+            "(full_name, email, phone, program, education, motivation, submitted_at, ip_address) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (full_name, email, phone, program, education, motivation, now, ip),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def get_applications():
+    """Return all applications ordered by newest first."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM applications ORDER BY id DESC"
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_application_status(app_id, status):
+    """Update application status (pending/accepted/rejected)."""
+    conn = get_connection()
+    try:
+        conn.execute(
+            "UPDATE applications SET status=? WHERE id=?",
+            (status, int(app_id)),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def get_contact_submissions():
+    """Return all contact submissions ordered by newest first."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM contact_submissions ORDER BY id DESC"
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_contact_status(submission_id, status):
+    """Update contact submission status (unread/read)."""
+    conn = get_connection()
+    try:
+        conn.execute(
+            "UPDATE contact_submissions SET status=? WHERE id=?",
+            (status, int(submission_id)),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+# ---------------------------------------------------------------------------
 # Site config (key-value)
 # ---------------------------------------------------------------------------
 
@@ -911,6 +1002,28 @@ def migrate_from_data_js(data_dict):
 # Module-level convenience: ensure tables exist on first import
 # ---------------------------------------------------------------------------
 
+def migrate_schema():
+    """Add new columns to existing tables (safe to run multiple times)."""
+    conn = get_connection()
+    migrations = [
+        ("team", "email", "TEXT"),
+        ("team", "phone", "TEXT"),
+        ("team", "telegram", "TEXT"),
+        ("team", "website", "TEXT"),
+        ("research_areas", "link", "TEXT"),
+        ("publications", "pdf_url", "TEXT"),
+        ("gallery", "images", "TEXT"),
+        ("contact_submissions", "status", "TEXT DEFAULT 'unread'"),
+    ]
+    for table, column, col_type in migrations:
+        try:
+            conn.execute(f"ALTER TABLE [{table}] ADD COLUMN [{column}] {col_type}")
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+
 if __name__ == "__main__":
     init_db()
+    migrate_schema()
     print(f"Database initialised at {DB_PATH}")

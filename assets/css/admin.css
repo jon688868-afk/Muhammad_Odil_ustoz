@@ -734,3 +734,30 @@ select.admin-form-input {
     gap: 8px;
   }
 }
+
+/* --- Gallery field --- */
+.admin-gallery-field { display: flex; flex-direction: column; gap: 10px; }
+.admin-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+.admin-gallery-thumb { position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 1; background: var(--a-bg-1); }
+.admin-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.admin-gallery-remove { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,.7); color: #fff; border: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.admin-gallery-remove:hover { background: #e53e3e; }
+
+/* --- File field --- */
+.admin-file-preview { margin-bottom: 8px; }
+.admin-file-link { color: var(--a-accent); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.admin-file-link:hover { text-decoration: underline; }
+.admin-file-none { color: var(--a-text-3); font-size: 13px; }
+
+/* --- Badges --- */
+.admin-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.admin-badge-success { background: rgba(72,187,120,.15); color: #48bb78; }
+.admin-badge-error { background: rgba(245,101,101,.15); color: #f56565; }
+.admin-badge-pending { background: rgba(237,187,53,.15); color: #edb835; }
+
+/* --- Status rows --- */
+.admin-status-unread { background: rgba(1,206,209,.05); }
+.admin-status-unread td:first-child { border-left: 3px solid var(--a-accent); }
+
+/* --- Small button --- */
+.admin-btn-sm { padding: 4px 10px; font-size: 12px; }
