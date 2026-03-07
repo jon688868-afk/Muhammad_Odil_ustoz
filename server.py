@@ -58,8 +58,12 @@ SESSION_DURATION = 86400              # 24 hours
 PBKDF2_ITERATIONS = 260_000
 
 # Rate limiting
-MAX_LOGIN_ATTEMPTS = 5
-RATE_WINDOW = 300  # 5 minutes
+MAX_LOGIN_ATTEMPTS = 3
+RATE_WINDOW = 60  # 1 minute
+
+# Cleanup interval for memory management
+CLEANUP_INTERVAL = 3600  # 1 hour
+_last_cleanup = 0
 
 # Magic bytes for file type validation
 MAGIC_BYTES = {
@@ -163,6 +167,30 @@ def check_rate_limit(ip):
         return False
     rate_limits[ip].append(now)
     return True
+
+
+def periodic_cleanup():
+    """Periodically clean up expired sessions and stale rate limit entries."""
+    global _last_cleanup
+    now = time.time()
+    if now - _last_cleanup < CLEANUP_INTERVAL:
+        return
+    _last_cleanup = now
+    # Clean expired sessions
+    clean_expired_sessions()
+    # Clean stale rate limit entries
+    stale_ips = [ip for ip, ts in rate_limits.items() if all(now - t >= RATE_WINDOW for t in ts)]
+    for ip in stale_ips:
+        del rate_limits[ip]
+
+
+# ─── HTML Sanitization ─────────────────────────────────────────────────────
+
+def strip_html_tags(text):
+    """Strip HTML tags from text to prevent stored XSS."""
+    if not text:
+        return text
+    return re.sub(r'<[^>]+>', '', text).strip()
 
 
 # ─── Session Management ───────────────────────────────────────────────────
@@ -471,6 +499,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
     # ─── GET Routes ────────────────────────────────────────────────────
 
     def do_GET(self):
+        periodic_cleanup()
         parsed = urlparse(self.path)
         path = parsed.path
 
@@ -633,7 +662,7 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
         if path == '/api/login':
             if not check_rate_limit(client_ip):
                 self.send_json(429, {
-                    'error': 'Too many login attempts. Try again in 5 minutes.'
+                    'error': 'Too many login attempts. Try again in 1 minute.'
                 })
                 return
 
@@ -749,10 +778,10 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
 
         # ── Contact Form ───────────────────────────────────────────────
         elif path == '/api/contact':
-            name = payload.get('name', '').strip()
+            name = strip_html_tags(payload.get('name', '').strip())
             email = payload.get('email', '').strip()
-            subject = payload.get('subject', '').strip()
-            message = payload.get('message', '').strip()
+            subject = strip_html_tags(payload.get('subject', '').strip())
+            message = strip_html_tags(payload.get('message', '').strip())
 
             # Validation
             if not name or not email or not message:
@@ -887,19 +916,25 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
 
         # ── Application submission (public) ──────────────────────────
         elif path == '/api/application':
-            full_name = payload.get('fullName', '').strip()
+            full_name = strip_html_tags(payload.get('fullName', '').strip())
             email = payload.get('email', '').strip()
             if not full_name:
                 self.send_json(400, {'error': 'Full name is required'})
                 return
+
+            # Email validation
+            if email and not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+                self.send_json(400, {'error': 'Invalid email address'})
+                return
+
             try:
                 db.save_application(
                     full_name=full_name,
                     email=email,
-                    phone=payload.get('phone', ''),
-                    program=payload.get('program', ''),
-                    education=payload.get('education', ''),
-                    motivation=payload.get('motivation', ''),
+                    phone=strip_html_tags(payload.get('phone', '')),
+                    program=strip_html_tags(payload.get('program', '')),
+                    education=strip_html_tags(payload.get('education', '')),
+                    motivation=strip_html_tags(payload.get('motivation', '')),
                     ip=client_ip,
                 )
                 self.send_json(200, {'success': True, 'message': 'Application submitted'})
@@ -944,6 +979,113 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 db.log_audit('logout', ip=client_ip)
             self.send_json(200, {'success': True})
 
+        else:
+            self.send_json(404, {'error': 'Not found'})
+
+    # ─── DELETE Routes ─────────────────────────────────────────────────
+
+    def do_DELETE(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        client_ip = self.get_client_ip()
+
+        # ── Delete uploaded file ───────────────────────────────────────
+        if path.startswith('/api/upload/'):
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+
+            filename = path.split('/api/upload/')[1]
+            if not filename or '/' in filename or '..' in filename:
+                self.send_json(400, {'error': 'Invalid filename'})
+                return
+
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            if not os.path.exists(file_path):
+                self.send_json(404, {'error': 'File not found'})
+                return
+
+            try:
+                os.remove(file_path)
+                db.log_audit('delete_file', details=f'Deleted {filename}', ip=client_ip)
+                self.send_json(200, {'success': True, 'message': f'File {filename} deleted'})
+            except Exception:
+                logging.exception('Failed to delete file')
+                self.send_json(500, {'error': 'Failed to delete file'})
+        else:
+            self.send_json(404, {'error': 'Not found'})
+
+    # ─── PUT Routes ────────────────────────────────────────────────────
+
+    def do_PUT(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        client_ip = self.get_client_ip()
+
+        # Read JSON body
+        payload = self.parse_json_body()
+        if payload is None:
+            return
+
+        # ── Update custom section ──────────────────────────────────────
+        if path.startswith('/api/custom-sections/'):
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+
+            slug = path.split('/api/custom-sections/')[1]
+            if not slug or not re.match(r'^[a-z0-9_]+$', slug):
+                self.send_json(400, {'error': 'Invalid section slug'})
+                return
+
+            label = payload.get('label', '').strip()
+            fields = payload.get('fields', [])
+            if not label:
+                self.send_json(400, {'error': 'Label is required'})
+                return
+
+            section_data = {
+                'slug': slug,
+                'label': label,
+                'icon': payload.get('icon', ''),
+                'fields': fields,
+                'sort_order': payload.get('sort_order', 0),
+            }
+            if payload.get('id'):
+                section_data['id'] = payload['id']
+
+            try:
+                sid = db.save_custom_section(section_data)
+                db.log_audit('custom_section_update', details=label, ip=client_ip)
+                self.send_json(200, {'success': True, 'id': sid, 'slug': slug})
+            except Exception:
+                logging.exception('Failed to update custom section')
+                self.send_json(500, {'error': 'Failed to update section'})
+
+        # ── Update custom section item ─────────────────────────────────
+        elif path.startswith('/api/custom-sections/') and '/items/' in path:
+            token = self.require_auth()
+            if not token:
+                return
+            if not self.require_csrf(token):
+                return
+            # Parse slug and item id from path
+            parts = path.replace('/api/custom-sections/', '').split('/items/')
+            if len(parts) != 2:
+                self.send_json(400, {'error': 'Invalid path'})
+                return
+            slug, item_id = parts[0], parts[1]
+            try:
+                item_id = int(item_id)
+            except ValueError:
+                self.send_json(400, {'error': 'Invalid item ID'})
+                return
+            # Items are saved through the bulk /api/custom-items/:slug endpoint
+            self.send_json(200, {'success': True, 'message': 'Use POST /api/custom-items/:slug for bulk update'})
         else:
             self.send_json(404, {'error': 'Not found'})
 

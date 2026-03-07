@@ -142,7 +142,7 @@ Agar deploy muvaffaqiyatsiz bo'lsa — GitHub Actions tabida qizil belgi ko'rina
 | GET | `/api/health` | Server holati |
 | GET | `/api/public-data` | Barcha sayt ma'lumotlari (frontend uchun) |
 | GET | `/api/site-config` | Sayt sozlamalari |
-| POST | `/api/login` | Admin login (rate limited: 3/min) |
+| POST | `/api/login` | Admin login (rate limited: 3/min, 1 daqiqa blok) |
 | POST | `/api/contact` | Aloqa formasi |
 
 ### Admin (token kerak)
@@ -154,6 +154,9 @@ Agar deploy muvaffaqiyatsiz bo'lsa — GitHub Actions tabida qizil belgi ko'rina
 | POST | `/api/upload` | Fayl yuklash (max 5MB) |
 | POST | `/api/change-password` | Parol o'zgartirish |
 | DELETE | `/api/upload/:filename` | Faylni o'chirish |
+| POST | `/api/application` | Ariza yuborish (public) |
+| POST | `/api/application-status` | Ariza holatini yangilash |
+| POST | `/api/contact-status` | Xabar holatini yangilash |
 
 ### Custom bo'limlar (admin)
 | Metod | Endpoint | Tavsif |
