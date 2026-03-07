@@ -887,11 +887,8 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
 
         # ── Application submission (public) ──────────────────────────
         elif path == '/api/application':
-            body = self.parse_json_body()
-            if body is None:
-                return
-            full_name = body.get('fullName', '').strip()
-            email = body.get('email', '').strip()
+            full_name = payload.get('fullName', '').strip()
+            email = payload.get('email', '').strip()
             if not full_name:
                 self.send_json(400, {'error': 'Full name is required'})
                 return
@@ -899,10 +896,10 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 db.save_application(
                     full_name=full_name,
                     email=email,
-                    phone=body.get('phone', ''),
-                    program=body.get('program', ''),
-                    education=body.get('education', ''),
-                    motivation=body.get('motivation', ''),
+                    phone=payload.get('phone', ''),
+                    program=payload.get('program', ''),
+                    education=payload.get('education', ''),
+                    motivation=payload.get('motivation', ''),
                     ip=client_ip,
                 )
                 self.send_json(200, {'success': True, 'message': 'Application submitted'})
@@ -917,12 +914,9 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 return
             if not self.require_csrf(token):
                 return
-            body = self.parse_json_body()
-            if body is None:
-                return
             try:
-                db.update_application_status(body['id'], body['status'])
-                db.log_audit('application_status', details=f"id={body['id']} status={body['status']}", ip=client_ip)
+                db.update_application_status(payload['id'], payload['status'])
+                db.log_audit('application_status', details=f"id={payload['id']} status={payload['status']}", ip=client_ip)
                 self.send_json(200, {'success': True})
             except Exception:
                 logging.exception('Failed to update application status')
@@ -935,11 +929,8 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 return
             if not self.require_csrf(token):
                 return
-            body = self.parse_json_body()
-            if body is None:
-                return
             try:
-                db.update_contact_status(body['id'], body['status'])
+                db.update_contact_status(payload['id'], payload['status'])
                 self.send_json(200, {'success': True})
             except Exception:
                 logging.exception('Failed to update contact status')
