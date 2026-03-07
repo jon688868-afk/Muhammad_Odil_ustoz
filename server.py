@@ -528,6 +528,10 @@ class IBXIHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json(500, {'error': 'Failed to load audit log'})
 
         else:
+            # Unknown /api/ routes return JSON 404
+            if path.startswith('/api/'):
+                self.send_json(404, {'error': 'Not found'})
+                return
             # Block access to sensitive files
             _, ext = os.path.splitext(path)
             if ext.lower() in ('.py', '.db', '.db-shm', '.db-wal', '.json', '.env', '.git'):
