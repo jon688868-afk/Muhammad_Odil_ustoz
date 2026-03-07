@@ -16,8 +16,14 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd /var/www/ibxi
-            git pull origin main
+            # Stash any local changes (like data.js synced from DB)
+            git stash 2>/dev/null || true
+            git fetch origin main
+            # Force reset to match remote (ensures app.js/admin.js are up to date)
+            git reset --hard origin/main
+            # Re-apply data.js from database if service is running
             systemctl restart ibxi.service
-            sleep 2
+            sleep 3
+            # Health check
             curl -sf http://127.0.0.1:8765/api/health || (echo "Health check failed!" && exit 1)
-            echo "Deploy successful!"
+            echo "Deploy successful! All files synced."
