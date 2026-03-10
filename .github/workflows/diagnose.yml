@@ -1,0 +1,51 @@
+name: Diagnose Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Diagnose via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            echo "=== IBXI SERVICE STATUS ==="
+            systemctl status ibxi.service --no-pager 2>&1 || true
+            echo ""
+            echo "=== IBXI SERVICE LOGS (last 50 lines) ==="
+            journalctl -u ibxi.service --no-pager -n 50 2>&1 || true
+            echo ""
+            echo "=== PORT 8765 CHECK ==="
+            ss -tlnp | grep 8765 || echo "Port 8765 NOT listening"
+            echo ""
+            echo "=== NGINX STATUS ==="
+            systemctl status nginx --no-pager 2>&1 || true
+            echo ""
+            echo "=== NGINX CONFIG ==="
+            cat /etc/nginx/sites-enabled/ibxi 2>/dev/null || cat /etc/nginx/sites-enabled/default 2>/dev/null || echo "No config found"
+            echo ""
+            echo "=== NGINX ERROR LOG (last 20) ==="
+            tail -20 /var/log/nginx/error.log 2>/dev/null || true
+            echo ""
+            echo "=== HEALTH CHECK ==="
+            curl -sf http://127.0.0.1:8765/api/health 2>&1 || echo "Health check FAILED"
+            echo ""
+            echo "=== FILES IN /var/www/ibxi ==="
+            ls -la /var/www/ibxi/ 2>/dev/null || echo "Directory not found"
+            echo ""
+            echo "=== GIT STATUS ==="
+            cd /var/www/ibxi && git log --oneline -3 2>&1 || true
+            echo ""
+            echo "=== DISK SPACE ==="
+            df -h / 2>&1
+            echo ""
+            echo "=== MEMORY ==="
+            free -h 2>&1
+            echo ""
+            echo "=== OTHER SERVICES ON PORT 80/443 ==="
+            ss -tlnp | grep -E ':80|:443' || true
