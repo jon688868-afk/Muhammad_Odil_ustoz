@@ -1,0 +1,50 @@
+name: Diagnose Server 3
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check what site Cloudflare serves vs direct
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            echo "=== Direct server response (localhost) ==="
+            curl -s http://127.0.0.1:8765/ | head -20
+            echo ""
+            echo "=== Nginx default site check ==="
+            ls -la /etc/nginx/sites-enabled/
+            echo ""
+            echo "=== Any other nginx configs? ==="
+            cat /etc/nginx/sites-enabled/default 2>/dev/null || echo "No default config"
+            echo ""
+            echo "=== All nginx server blocks ==="
+            grep -r "server_name" /etc/nginx/sites-enabled/ 2>/dev/null || true
+            grep -r "server_name" /etc/nginx/conf.d/ 2>/dev/null || true
+            echo ""
+            echo "=== Cloudflare check from server ==="
+            curl -sI https://bukhariinstitute.com 2>&1 | head -20
+            echo ""
+            echo "=== Direct IP check ==="
+            curl -sI http://109.199.121.225 2>&1 | head -15
+            echo ""
+            echo "=== SSL cert check ==="
+            openssl x509 -in /etc/nginx/ssl/ibxi.crt -noout -subject -dates 2>&1 || echo "No cert"
+            echo ""
+            echo "=== Cloudflare origin cert check ==="
+            curl -v --resolve bukhariinstitute.com:443:127.0.0.1 https://bukhariinstitute.com 2>&1 | head -30
+      - name: Check from external
+        run: |
+          echo "=== External check of bukhariinstitute.com ==="
+          curl -sI https://bukhariinstitute.com 2>&1 | head -20
+          echo ""
+          echo "=== Full page from bukhariinstitute.com ==="
+          curl -s https://bukhariinstitute.com | head -30
+          echo ""
+          echo "=== Direct IP access ==="
+          curl -sI --insecure https://109.199.121.225 -H "Host: bukhariinstitute.com" 2>&1 | head -15
